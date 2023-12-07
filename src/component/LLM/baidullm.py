@@ -4,6 +4,56 @@ from marshmallow import Schema, fields, validate, ValidationError
 class HeaderSchema(Schema):
     content_type = fields.Str(required=True, validate=validate.Equal("application/json"))
 
+class FunctionCallSchema(Schema):
+    name = fields.Str(required=True)
+    arguments = fields.Str(required=True)
+    thoughts = fields.Str()
+
+class MessageSchema(Schema):
+    role = fields.Str(required=True, validate=validate.OneOf(["user", "assistant", "function"]))
+    content = fields.Str(required=True)
+    name = fields.Str()
+    function_call = fields.Nested(FunctionCallSchema)
+
+
+class ExampleSchema(Schema):
+    role = fields.Str(required=True, validate=validate.OneOf(["user", "assistant", "function"]))
+    content = fields.Str(required=True)
+    name = fields.Str()
+    function_call = fields.Nested(FunctionCallSchema)
+
+class FunctionSchema(Schema):
+    name = fields.Str(required=True)
+    description = fields.Str(required=True)
+    parameters = fields.Dict(required=True)
+    responses = fields.Dict()
+    examples = fields.List(fields.Nested(ExampleSchema))
+
+
+class SearchResultSchema(Schema):
+    index = fields.Int()
+    url = fields.Str()
+    title = fields.Str()
+    datasource_id = fields.Str()
+
+class SearchInfoSchema(Schema):
+    is_beset = fields.Int()
+    rewrite_query = fields.Str()
+    search_results = fields.List(fields.Nested(SearchResultSchema))
+
+class PluginUsageSchema(Schema):
+    name = fields.Str()
+    parse_tokens = fields.Int()
+    abstract_tokens = fields.Int()
+    search_tokens = fields.Int()
+    total_tokens = fields.Int()
+
+class UsageSchema(Schema):
+    prompt_tokens = fields.Int()
+    completion_tokens = fields.Int()
+    total_tokens = fields.Int()
+    plugins = fields.List(fields.Nested(PluginUsageSchema))
+
 class Header:
     def __init__(self, content_type):
         self.content_type = content_type
@@ -92,11 +142,7 @@ class Body:
         return not errors
 
 
-class MessageSchema(Schema):
-    role = fields.Str(required=True, validate=validate.OneOf(["user", "assistant", "function"]))
-    content = fields.Str(required=True)
-    name = fields.Str()
-    function_call = fields.Nested(FunctionCallSchema)
+
 
 class Message:
     def __init__(self, role, content, name=None, function_call=None):
@@ -120,12 +166,7 @@ class Message:
         return not errors
 
 
-class FunctionSchema(Schema):
-    name = fields.Str(required=True)
-    description = fields.Str(required=True)
-    parameters = fields.Dict(required=True)
-    responses = fields.Dict()
-    examples = fields.List(fields.Nested(ExampleSchema))
+
 
 class Function:
     def __init__(self, name, description, parameters, responses=None, examples=None):
@@ -150,11 +191,6 @@ class Function:
         return not errors
 
 
-class ExampleSchema(Schema):
-    role = fields.Str(required=True, validate=validate.OneOf(["user", "assistant", "function"]))
-    content = fields.Str(required=True)
-    name = fields.Str()
-    function_call = fields.Nested(FunctionCallSchema)
 
 class Example:
     def __init__(self, role, content, name=None, function_call=None):
@@ -178,10 +214,7 @@ class Example:
         return not errors
 
 
-class FunctionCallSchema(Schema):
-    name = fields.Str(required=True)
-    arguments = fields.Str(required=True)
-    thoughts = fields.Str()
+
 
 class FunctionCall:
     def __init__(self, name, arguments, thoughts=None):
@@ -251,11 +284,6 @@ class Response:
         return not errors
 
 
-class SearchInfoSchema(Schema):
-    is_beset = fields.Int()
-    rewrite_query = fields.Str()
-    search_results = fields.List(fields.Nested(SearchResultSchema))
-
 class SearchInfo:
     def __init__(self, is_beset, rewrite_query, search_results):
         self.is_beset = is_beset
@@ -277,11 +305,6 @@ class SearchInfo:
         return not errors
 
 
-class SearchResultSchema(Schema):
-    index = fields.Int()
-    url = fields.Str()
-    title = fields.Str()
-    datasource_id = fields.Str()
 
 class SearchResult:
     def __init__(self, index, url, title, datasource_id):
@@ -305,11 +328,7 @@ class SearchResult:
         return not errors
 
 
-class UsageSchema(Schema):
-    prompt_tokens = fields.Int()
-    completion_tokens = fields.Int()
-    total_tokens = fields.Int()
-    plugins = fields.List(fields.Nested(PluginUsageSchema))
+
 
 class Usage:
     def __init__(self, prompt_tokens, completion_tokens, total_tokens, plugins):
@@ -333,12 +352,7 @@ class Usage:
         return not errors
 
 
-class PluginUsageSchema(Schema):
-    name = fields.Str()
-    parse_tokens = fields.Int()
-    abstract_tokens = fields.Int()
-    search_tokens = fields.Int()
-    total_tokens = fields.Int()
+
 
 class PluginUsage:
     def __init__(self, name, parse_tokens, abstract_tokens, search_tokens, total_tokens):
@@ -375,6 +389,7 @@ def test_entities():
     # Test QueryParameter
     query_parameter_data = {"access_token": "your_access_token"}
     query_parameter = QueryParameter.from_json(query_parameter_data)
+    print(query_parameter)
     assert query_parameter.is_valid()
     assert query_parameter.to_json() == query_parameter_data
 
@@ -438,19 +453,14 @@ def test_entities():
 
     print("All test cases passed!")
 
-# Run the test
-
-
-
-
-
 
 #######################################################################
 
-@LLMAdapter.register_model("baidu-model")
-class BaiduModel:
-    # 实现百度大模型的相关功能
-    pass
+# @LLMAdapter.register_model("baidu-model")
+# class BaiduModel:
+#     # 实现百度大模型的相关功能
+#     pass
 
 if __name__ == '__main__':
+    # Run the test
     test_entities()
