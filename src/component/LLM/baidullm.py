@@ -1,28 +1,36 @@
 import LLMAdapter
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, fields, validate, ValidationError, post_dump
 
-class HeaderSchema(Schema):
+class BaseSchema(Schema):
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items() 
+            if value is not None  
+        }
+
+class HeaderSchema(BaseSchema):
     content_type = fields.Str(required=True, validate=validate.Equal("application/json"))
 
-class FunctionCallSchema(Schema):
+class FunctionCallSchema(BaseSchema):
     name = fields.Str(required=True)
     arguments = fields.Str(required=True)
     thoughts = fields.Str()
 
-class MessageSchema(Schema):
+class MessageSchema(BaseSchema):
     role = fields.Str(required=True, validate=validate.OneOf(["user", "assistant", "function"]))
     content = fields.Str(required=True)
     name = fields.Str()
     function_call = fields.Nested(FunctionCallSchema)
 
 
-class ExampleSchema(Schema):
+class ExampleSchema(BaseSchema):
     role = fields.Str(required=True, validate=validate.OneOf(["user", "assistant", "function"]))
     content = fields.Str(required=True)
     name = fields.Str()
     function_call = fields.Nested(FunctionCallSchema)
 
-class FunctionSchema(Schema):
+class FunctionSchema(BaseSchema):
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     parameters = fields.Dict(required=True)
@@ -30,25 +38,25 @@ class FunctionSchema(Schema):
     examples = fields.List(fields.Nested(ExampleSchema))
 
 
-class SearchResultSchema(Schema):
+class SearchResultSchema(BaseSchema):
     index = fields.Int()
     url = fields.Str()
     title = fields.Str()
     datasource_id = fields.Str()
 
-class SearchInfoSchema(Schema):
+class SearchInfoSchema(BaseSchema):
     is_beset = fields.Int()
     rewrite_query = fields.Str()
     search_results = fields.List(fields.Nested(SearchResultSchema))
 
-class PluginUsageSchema(Schema):
+class PluginUsageSchema(BaseSchema):
     name = fields.Str()
     parse_tokens = fields.Int()
     abstract_tokens = fields.Int()
     search_tokens = fields.Int()
     total_tokens = fields.Int()
 
-class UsageSchema(Schema):
+class UsageSchema(BaseSchema):
     prompt_tokens = fields.Int()
     completion_tokens = fields.Int()
     total_tokens = fields.Int()
@@ -78,7 +86,7 @@ class Header:
         errors = schema.validate(self.__dict__)
         return not errors
 
-class QueryParameterSchema(Schema):
+class QueryParameterSchema(BaseSchema):
     access_token = fields.Str(required=True)
 
 class QueryParameter:
@@ -99,7 +107,7 @@ class QueryParameter:
         errors = schema.validate(self.__dict__)
         return not errors
 
-class BodySchema(Schema):
+class BodySchema(BaseSchema):
     messages = fields.List(fields.Nested(MessageSchema), required=True)
     functions = fields.List(fields.Nested(FunctionSchema))
     temperature = fields.Float()
@@ -237,7 +245,7 @@ class FunctionCall:
         return not errors
 
 
-class ResponseSchema(Schema):
+class ResponseSchema(BaseSchema):
     id = fields.Str()
     object = fields.Str(validate=validate.Equal("chat.completion"))
     created = fields.Int()
