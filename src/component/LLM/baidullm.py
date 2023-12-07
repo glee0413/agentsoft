@@ -473,12 +473,11 @@ def test_entities():
     assert header.to_json() == header_data
     query_parameter_data = {'access_token': 'your_access_token'}
     query_parameter = QueryParameter.from_json(query_parameter_data)
-    print(query_parameter)
     assert query_parameter.is_valid()
     assert query_parameter.to_json() == query_parameter_data
     message_data = {'role': 'user', 'content': 'Hello, how are you?'}
     message = Message.from_json(message_data)
-    body_data = {'messages': [message], 'temperature': 0.8}
+    body_data = {'messages': [message.to_json()], 'temperature': 0.8}
     body = Body.from_json(body_data)
     assert body.is_valid()
     assert body.to_json() == body_data
@@ -500,11 +499,11 @@ def test_entities():
         'Example Title', 'datasource_id': '123'}
     search_result = SearchResult.from_json(search_result_data)
     search_info_data = {'is_beset': 0, 'rewrite_query': 'example query',
-        'search_results': [search_result]}
+        'search_results': [search_result.to_json()]}
     search_info = SearchInfo.from_json(search_info_data)
     response_data = {'id': '123456', 'object': 'chat.completion', 'created':
         1234567890, 'sentence_id': 1, 'is_end': True, 'is_truncated': False,
-        'finish_reason': 'normal', 'search_info': search_info, 'result':
+        'finish_reason': 'normal', 'search_info': search_info.to_json(), 'result':
         'This is the generated result', 'need_clear_history': False,
         'ban_round': -1, 'usage': {'prompt_tokens': 10, 'completion_tokens':
         20, 'total_tokens': 30, 'plugins': []}, 'function_call':
@@ -516,7 +515,7 @@ def test_entities():
         'abstract_tokens': 5, 'search_tokens': 10, 'total_tokens': 20}
     plugin_usage = PluginUsage.from_json(plugin_usage_data)
     usage_data = {'prompt_tokens': 10, 'completion_tokens': 20,
-        'total_tokens': 30, 'plugins': [plugin_usage]}
+        'total_tokens': 30, 'plugins': [plugin_usage.to_json()]}
     usage = Usage.from_json(usage_data)
     assert usage.is_valid()
     assert usage.to_json() == usage_data
