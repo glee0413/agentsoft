@@ -100,7 +100,12 @@ class QueryParameter:
     @staticmethod
     def from_json(json_data):
         schema = QueryParameterSchema()
-        return schema.load(json_data)
+        try:
+            query_param_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return QueryParameter(**query_param_dict)
 
     def is_valid(self):
         schema = QueryParameterSchema()
@@ -142,7 +147,12 @@ class Body:
     @staticmethod
     def from_json(json_data):
         schema = BodySchema()
-        return schema.load(json_data)
+        try:
+            body_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return Body(**body_dict)
 
     def is_valid(self):
         schema = BodySchema()
@@ -166,7 +176,12 @@ class Message:
     @staticmethod
     def from_json(json_data):
         schema = MessageSchema()
-        return schema.load(json_data)
+        try:
+            message_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return Message(**message_dict)
 
     def is_valid(self):
         schema = MessageSchema()
@@ -191,7 +206,12 @@ class Function:
     @staticmethod
     def from_json(json_data):
         schema = FunctionSchema()
-        return schema.load(json_data)
+        try:
+            function_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return Function(**function_dict)
 
     def is_valid(self):
         schema = FunctionSchema()
@@ -214,7 +234,12 @@ class Example:
     @staticmethod
     def from_json(json_data):
         schema = ExampleSchema()
-        return schema.load(json_data)
+        try:
+            example_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return Example(**example_dict)
 
     def is_valid(self):
         schema = ExampleSchema()
@@ -237,7 +262,12 @@ class FunctionCall:
     @staticmethod
     def from_json(json_data):
         schema = FunctionCallSchema()
-        return schema.load(json_data)
+        try:
+            function_call_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return FunctionCall(**function_call_dict)
 
     def is_valid(self):
         schema = FunctionCallSchema()
@@ -284,7 +314,12 @@ class Response:
     @staticmethod
     def from_json(json_data):
         schema = ResponseSchema()
-        return schema.load(json_data)
+        try:
+            response_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return Response(**response_dict)
 
     def is_valid(self):
         schema = ResponseSchema()
@@ -305,7 +340,12 @@ class SearchInfo:
     @staticmethod
     def from_json(json_data):
         schema = SearchInfoSchema()
-        return schema.load(json_data)
+        try:
+            search_info_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return SearchInfo(**search_info_dict)
 
     def is_valid(self):
         schema = SearchInfoSchema()
@@ -328,7 +368,12 @@ class SearchResult:
     @staticmethod
     def from_json(json_data):
         schema = SearchResultSchema()
-        return schema.load(json_data)
+        try:
+            search_result_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return SearchResult(**search_result_dict)
 
     def is_valid(self):
         schema = SearchResultSchema()
@@ -352,7 +397,12 @@ class Usage:
     @staticmethod
     def from_json(json_data):
         schema = UsageSchema()
-        return schema.load(json_data)
+        try:
+            usage_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return Usage(**usage_dict)
 
     def is_valid(self):
         schema = UsageSchema()
@@ -377,7 +427,12 @@ class PluginUsage:
     @staticmethod
     def from_json(json_data):
         schema = PluginUsageSchema()
-        return schema.load(json_data)
+        try:
+            plugin_usage_dict = schema.load(json_data)
+        except ValidationError as e:
+            print('错误信息：{}   合法数据：{}'.format(e.messages, e.valid_data))
+            return None
+        return PluginUsage(**plugin_usage_dict)
 
     def is_valid(self):
         schema = PluginUsageSchema()
