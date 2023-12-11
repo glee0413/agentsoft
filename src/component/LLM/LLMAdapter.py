@@ -9,7 +9,7 @@ class LLMAdapter:
         self.load_config()
         self.register_models()
 
-    def load_config(self):
+    def load_config(self,config):
         # 从配置文件加载配置，选择要使用的模型
         # 在这里读取配置的代码...
         pass
