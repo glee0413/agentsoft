@@ -40,15 +40,6 @@ class FeishuConfig(BaseSettings):
 
 env_config = FeishuConfig()
 
-
-"""
-{ 
-    "challenge": "ajls384kdjx98XX",
-    "token": "xxxxxx",
-    "type": "url_verification"
-}
-"""
-
 message_api_client = MessageApiClient(env_config.APP_ID, env_config.APP_SECRET, env_config.LARK_HOST)
 event_handler = EventHandler()
 
@@ -69,17 +60,11 @@ async def url_verification(request: PostRequest):
 
 @app.post("/event_notifier")
 async def event_notifier(request: Request , event: EventPack):
-    # body = await request.body()
-    # body = json.loads(body.decode("utf-8"))
-    
-    # if 'url_verification' in body:
-    #     return ResponseResult(challenge=request.challenge)
-
     if isinstance(event,ChallengeVerification):
         print("event is ChallengeVerification")
         return ResponseResult(challenge=event.challenge)
     elif isinstance(event, EventPack):
-        print(f'schema: {event.schema}')
+        print(f'schema: {event.schema_v}')
         print(f'event type: {event.header.event_type}')
         await event_handler.dispatch(event)
     else:

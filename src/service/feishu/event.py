@@ -1,6 +1,8 @@
 from typing import List, Optional,Union
 from pydantic import BaseModel, Field
 import json
+from api import MessageApiClient
+from pydantic_settings import BaseSettings
 
 class ChallengeVerification(BaseModel):
     challenge: str
@@ -52,7 +54,20 @@ class EventPack(BaseModel):
     schema_v: str = Field(..., alias="schema")
     header: Header
     event: Event
-    
+
+class FeishuConfig(BaseSettings):
+    APP_ID: str
+    APP_SECRET: str
+    VERIFICATION_TOKEN: str
+    ENCRYPT_KEY: str
+    LARK_HOST: str
+    class Config:
+        env_file = ".env_feishu"
+
+env_config = FeishuConfig()
+
+message_api_client = MessageApiClient(env_config.APP_ID, env_config.APP_SECRET, env_config.LARK_HOST)
+
 class EventHandler():
     def __init__(self) -> None:
         pass
@@ -60,6 +75,11 @@ class EventHandler():
     async def dispatch(self, event_box: EventPack):
         print(f'header: {event_box.header.event_type}:{event_box.header.event_id}')
         print(f'event: {event_box.event.sender.sender_id}_{event_box.event.message.chat_type} : {event_box.event.message.content}')
+        
+        
+        
+        message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
+                                                  event_box.event.message.content)
         return
     
 test_json="""
@@ -111,6 +131,13 @@ test_json="""
 }
 """
 
+test_json2="""
+{ 
+    "challenge": "ajls384kdjx98XX",
+    "token": "xxxxxx",
+    "type": "url_verification"
+}
+"""
 class User(BaseModel):
     name: str
     age: Optional[int] = None
