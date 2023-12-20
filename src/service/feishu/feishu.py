@@ -1,14 +1,13 @@
 from fastapi import FastAPI, Request, Response
 from fastapi import HTTPException
 from pydantic import BaseModel
-from pydantic_settings import BaseSettings
+
 from typing import Union
 
 import uvicorn
 import time
 import os
 from event import EventHandler, EventPack, ChallengeVerification
-from api import MessageApiClient
 import json
 
 app = FastAPI()
@@ -29,18 +28,7 @@ class WebStatus():
         
 web_status = WebStatus()
 
-class FeishuConfig(BaseSettings):
-    APP_ID: str
-    APP_SECRET: str
-    VERIFICATION_TOKEN: str
-    ENCRYPT_KEY: str
-    LARK_HOST: str
-    class Config:
-        env_file = ".env_feishu"
 
-env_config = FeishuConfig()
-
-message_api_client = MessageApiClient(env_config.APP_ID, env_config.APP_SECRET, env_config.LARK_HOST)
 event_handler = EventHandler()
 
 @app.post("/url_verification")
@@ -77,16 +65,16 @@ async def event_notifier(request: Request , event: EventPack):
 @app.middleware("http")
 async def log_request(request: Request, call_next):
     # 获取访问的URL
-    url = str(request.url)
+    print(f'###########################{web_status.ping_count}###################################')
+    web_status.ping_count += 1
     
-    # 记录日志
-    print(f"请求的URL: {url}")
-    print(f"请求的base_url: {request.base_url}")
+    print(f"请求的URL: {request.url}")
+    # print(f"请求的base_url: {request.base_url}")
     print(f"请求的方法: {request.method}")
-    print(f"请求的头部: {request.headers}")
-    print(f"请求的查询参数: {request.query_params}")
-    print(f"请求的路径参数: {request.path_params}")
-    print(f"请求的Cookies: {request.cookies}")
+    # print(f"请求的头部: {request.headers}")
+    # print(f"请求的查询参数: {request.query_params}")
+    # print(f"请求的路径参数: {request.path_params}")
+    # print(f"请求的Cookies: {request.cookies}")
     
     # print(f"请求的主体: {await request.json()}")
     

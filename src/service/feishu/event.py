@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 import json
 from api import MessageApiClient
 from pydantic_settings import BaseSettings
-
+import time
 class ChallengeVerification(BaseModel):
     challenge: str
     token: str
@@ -68,16 +68,41 @@ env_config = FeishuConfig()
 
 message_api_client = MessageApiClient(env_config.APP_ID, env_config.APP_SECRET, env_config.LARK_HOST)
 
+class MessageRecord():
+    def __init__(self) -> None:
+        self.message_list = {}
+    
+    def add_message(self, event_box: EventPack):
+        if event_box.event.message.message_id not in self.message_list:
+            self.message_list[event_box.event.message.message_id] = event_box
+            return True
+        return False
+
+    def message_exist(self,message_id):
+        if message_id in self.message_list:
+            return True
+        else:
+            return False
+
 class EventHandler():
     def __init__(self) -> None:
+        self.message_record = MessageRecord()
         pass
     
     async def dispatch(self, event_box: EventPack):
-        print(f'header: {event_box.header.event_type}:{event_box.header.event_id}')
-        print(f'event: {event_box.event.sender.sender_id}_{event_box.event.message.chat_type} : {event_box.event.message.content}')
+        # print(f'header:event_type:{event_box.header.event_type}, eventid:{event_box.header.event_id}')
+        # print(f'event: {event_box.event.sender.sender_id}_{event_box.event.message.chat_type} : {event_box.event.message.content}')
+        # print(f"message: {event_box.event.message.message_id}")
         
+        #print(event_box)
         
+        if self.message_record.message_exist(event_box.event.message.message_id):
+            print(f'Message {event_box.event.message.message_id} exist')
+            return
+        self.message_record.add_message(event_box)
         
+        print(event_box.model_dump_json(indent=4))
+        time.sleep(10)
         message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
                                                   event_box.event.message.content)
         return
