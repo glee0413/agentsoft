@@ -8,6 +8,7 @@ agent通过关键的功能组合完成具体的功能
 具备自省introspection能力，自己与自己对话，(Self-consistency CoT)
 事件驱动模式
 Self-Verification、Self-consistency，selfcritiquing
+### 类图
 
 ## introspection
 实现Chain of Though能力实现任务拆解能力，自问自答自测，降低幻觉影响
