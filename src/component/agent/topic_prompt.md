@@ -5,17 +5,24 @@
 
 # 软件需求规范:
 
-## AgentBase基类需求规范
-### AgentBase功能
-- AgentBase为一个虚基类
-- 包含的成员变量有：名字，出生时间，使用的LLM模型，
-- 实现一个load_config(self,config)函数，用于加载自身的配置
-
-
-## LaunchSimple基类需求规范
-- 继承自LaunchBase
-- 包含ConfigBase类的对象
-- 读取配置文件调用ConfigBase类对象的load_json(self, filename)函数
+## TopicBase基类需求规范
+### TopicBase功能
+- TopicBase可以通过protobuf格式进行转化
+- TopicBase可以通过kafka进行通讯
+- 类中添加如下注释
+```
+    TopicBase消息主要用户agent之间进行传递消息，与大模型的通讯需使用特定模型的api的数据结构
+```
+### TopicBase成员变量
+- 关联一个格式为md5的任务id
+- topic标识Id：每个topic创建时自动创建一个md5，通过此id可以关联上下文，比如在飞书里面用户可以针对客户的引用关联到不同的topic上
+- topic名称
+- 消息发起者
+- 消息接受者
+- 消息发起时间
+- 消息主体内容
+### TopicBase成员函数
+- 填写消息
 
 生成格式要求：
 代码输出格式为markdown代码段，示例如下：
