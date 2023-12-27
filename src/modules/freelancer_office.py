@@ -81,6 +81,12 @@ class FreelancerOffice:
         self.message_loop_thread = threading.Thread(target=self.message_loop)
         self.thread_stop = False
     
+    def post_message(self,receive_id:str,message:Message):
+        print(f'{datetime.now()}#recieve {receive_id}: {message.model_dump_json()}')
+        message_str = message.model_dump_json()
+        self.kafka_producer.send(message.sender_id,message_str)
+        self.kafka_producer.flush()
+    
     # 逻辑处理类
     def message_loop(self):
         print(f'message loop start')
@@ -93,24 +99,18 @@ class FreelancerOffice:
                 continue
             
             msg_ts = datetime.fromtimestamp(msg.timestamp / 1000)
-                        
-            #message_dict = eval(msg.value.decode('utf-8'))
-            # Message.model_validate_json()
-            # message = Message(**msg.value.decode('utf-8'))
-            
-            
-            print(f'{datetime.utcnow()}#{msg_ts}# {msg.value}')
+      
+            print(f'{datetime.now()}#{datetime.now()-msg_ts}# {msg.value}')
 
             message = Message.model_validate_json(msg.value.decode('utf-8'))
 
             if message.content == 'echo':
-                message.content = 'respect'
-                print(f'echo message {message}')
-
-                message_str = message.model_dump_json()
-                self.kafka_producer.send(message.sender_id,message_str)
-                self.kafka_producer.flush()
-                print(f'{datetime.utcnow()}# resend back to {message.sender_id}')
+                # message.content = 'respect'
+                # message_str = message.model_dump_json()
+                # self.kafka_producer.send(message.sender_id,message_str)
+                # self.kafka_producer.flush()
+                self.post_message(message.sender_id,message)
+                
             self.kafka_consumer.commit()
         return
     

@@ -43,7 +43,7 @@ class Messenger:
             content=content,
             sender_id=self.office_id,
             receive_ids=[receive_id],
-            create_timestamp=datetime.utcnow()
+            create_timestamp=datetime.now()
         )
         
         # json_str = message.model_dump()
@@ -51,16 +51,14 @@ class Messenger:
         # message_temp = Message(**json_str)
         message_str = message.model_dump_json()
         
-        print(f"{datetime.utcnow()} #send to {self.post_address} : {message_str}")
+        print(f"{datetime.now()} #send to {self.post_address} : {message_str}")
         self.kafka_producer.send(
             self.post_address,
             #dict(message)
             value=message_str
         )
         self.kafka_producer.flush()
-        
-        print(f"{datetime.utcnow()} #send message {content} over")
-        
+                
         return
 
     def register(self, lancer_request:RegisterLancerRequest, message_cb=None):
@@ -94,7 +92,7 @@ class Messenger:
 
             #message_dict = eval(msg.value.decode('utf-8'))
             # message = Message(**message_dict)
-            print(f'run:{msg}')
+            #print(f'run:{msg}')
             # self.kafka_consumer.commit()
             # continue
 

@@ -7,6 +7,9 @@ import uuid
 from abc import ABC, abstractmethod
 from message import RegisterLancerRequest, RegisterLancerResponse
 
+import time
+from datetime import datetime
+
 class PromptTemplate:
     def __init__(self, template, parameter):
         self.template = template
@@ -82,9 +85,11 @@ class EchoAgent(Agent):
     
     def ReceiveMessage(self, message: Message):
         # 接收消息的函数
-        print("Received message:")
-        print("Message ID:", message.id)
-        print("Message content:", message.content)
+        print(f"{datetime.now()}#: {message.content}")
+        
+        time.sleep(1)
+        self.PostMessage(content = message.content)
+        
     
     def PostMessage(self, receive_id:str='all',content : str = ''):
         self.messenger.post_message(receive_id = receive_id, content = content)
