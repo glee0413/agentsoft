@@ -4,6 +4,8 @@ import sys
 from messenger import Messenger
 from message import Message
 import uuid
+from abc import ABC, abstractmethod
+from message import RegisterLancerRequest, RegisterLancerResponse
 
 class PromptTemplate:
     def __init__(self, template, parameter):
@@ -27,44 +29,92 @@ class HatRack:
         # 根据角色名获取对应的帽子
         pass
 
-class Agent:
+class Agent(ABC):
     def __init__(self, name):
         self.id = str(uuid.uuid4())
         self.name = name
         self.resume = ''
-        self.classmate = []
+        self.profession = 'consultant'
+        # team_id: [agent_a_id,agent_b_id]
+        self.teammate = {}
+        # 相同职能的人，可相互补充完成同类的问题
+        self.group_id = ''
+        # 不同职能，通过协同合作来达到共同目标
+        self.team_id =[]
+                
+        self.messenger = Messenger(agent_id=self.id,group_id=self.profession)
+        lancer_request = RegisterLancerRequest(
+            profession = self.profession,
+            name = self.name,
+            id = self.id,
+            assign_type='auto'
+        )
+        self.post_id = self.messenger.register(lancer_request = lancer_request,
+            message_cb = self.ReceiveMessage)
         
-        self.messenger = Messenger(self.id)
-        
-        self.messenger.register(topic_id = self.id,agent_id = self.id,message_cb = self.ReceiveMessage)
-        
-
+    @abstractmethod
     def ReceiveMessage(self,message:Message):
-        # 接收消息的函数
-        print(message.id)
-        print(message.content)
-        pass
 
-    def PostMessage(self,content):
-        self.messenger.post_message(self.id, content)
         pass
-
+    
+    @abstractmethod
+    def PostMessage(self,receive_id,content):
+        pass
+    
+    @abstractmethod
     def Conclude(self):
         # 总结的函数
         pass
-
+    
+    @abstractmethod
     def launch(self):
         # 启动Agent
-        self.messenger.run()
         pass
-
+    
+    @abstractmethod
     def stop(self):
         # 停止Agent
         pass
+
+class EchoAgent(Agent):
+    def __init__(self, name):
+        super().__init__(name)
     
-class LLMAgent():
+    def ReceiveMessage(self, message: Message):
+        # 接收消息的函数
+        print("Received message:")
+        print("Message ID:", message.id)
+        print("Message content:", message.content)
+    
+    def PostMessage(self, receive_id:str='all',content : str = ''):
+        self.messenger.post_message(receive_id = receive_id, content = content)
+    
+    def Conclude(self):
+        # 总结的函数
+        pass
+    
+    def launch(self):
+        # 启动Agent
+        self.messenger.run()
+    
+    def stop(self):
+        # 停止Agent
+        pass
+
+class LLMAgent(Agent):
     # 负责调用外部大模型
-    pass
+    def ReceiveMessage(self,message:Message):
+        return
+    
+    def PostMessage(self,content):
+        return
+    
+    def launch(self):
+        return
+    
+    def stop(self):
+        return
+    
 
 class RLLMAgent():
     # 负责调用本地大模型
@@ -73,8 +123,8 @@ class RLLMAgent():
 
 
 def test_agent():
-    agent = Agent('小睿慧聊')
-    agent.PostMessage('hello world')
+    agent = EchoAgent('小睿慧聊')
+    agent.PostMessage(content = 'echo')
     agent.launch()
     
 
