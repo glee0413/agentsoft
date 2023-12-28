@@ -9,7 +9,7 @@ from message import RegisterLancerRequest, RegisterLancerResponse
 
 import time
 from datetime import datetime
-
+import asyncio
 class PromptTemplate:
     def __init__(self, template, parameter):
         self.template = template
@@ -33,9 +33,10 @@ class HatRack:
         pass
 
 class Agent(ABC):
-    def __init__(self, name):
+    def __init__(self, name, async_mode = False):
         self.id = str(uuid.uuid4())
         self.name = name
+        self.async_mode = async_mode
         self.resume = ''
         self.profession = 'consultant'
         # team_id: [agent_a_id,agent_b_id]
@@ -45,7 +46,7 @@ class Agent(ABC):
         # 不同职能，通过协同合作来达到共同目标
         self.team_id =[]
                 
-        self.messenger = Messenger(agent_id=self.id,group_id=self.profession)
+        self.messenger = Messenger(agent_id=self.id,group_id=self.profession,async_mode = self.async_mode)
         lancer_request = RegisterLancerRequest(
             profession = self.profession,
             name = self.name,
@@ -57,7 +58,6 @@ class Agent(ABC):
         
     @abstractmethod
     def ReceiveMessage(self,message:Message):
-
         pass
     
     @abstractmethod
@@ -81,15 +81,20 @@ class Agent(ABC):
 
 class EchoAgent(Agent):
     def __init__(self, name):
-        super().__init__(name)
+        super().__init__(name,async_mode=True)
     
-    def ReceiveMessage(self, message: Message):
+    # 如使用异步方式，在lanch函数里面要用调用异步run方式
+    async def ReceiveMessage(self, message: Message):
         # 接收消息的函数
         print(f"{datetime.now()}#: {message.content}")
         
-        time.sleep(1)
-        self.PostMessage(content = message.content)
+        await asyncio.sleep(1) 
+        #time.sleep(1)
+        await self.aPostMessage(content = message.content)
         
+    
+    async def aPostMessage(self, receive_id:str='all',content : str = ''):
+        await self.messenger.apost_message(receive_id = receive_id, content = content)
     
     def PostMessage(self, receive_id:str='all',content : str = ''):
         self.messenger.post_message(receive_id = receive_id, content = content)
@@ -100,7 +105,11 @@ class EchoAgent(Agent):
     
     def launch(self):
         # 启动Agent
-        self.messenger.run()
+        # self.messenger.run()
+        # self.messenger.arun()
+        # asyncio.get_event_loop().run_until_complete(self.messenger.arun())
+        print(f'launched')
+        self.messenger.run(sync_run=False)
     
     def stop(self):
         # 停止Agent
@@ -108,11 +117,10 @@ class EchoAgent(Agent):
 
 class LLMAgent(Agent):
     def __init__(self, name):
-        
         super().__init__(name)
         
     # 负责调用外部大模型
-    def ReceiveMessage(self,message:Message):
+    async def ReceiveMessage(self,message:Message):
         return
     
     def PostMessage(self,content):
@@ -141,7 +149,8 @@ class RLLMAgent():
 
 def test_agent():
     agent = EchoAgent('小睿慧聊')
-    agent.PostMessage(content = 'echo')
+    #agent.PostMessage(content = 'echo')
+    asyncio.get_event_loop().run_until_complete(agent.aPostMessage('hello'))
     agent.launch()
     
 
