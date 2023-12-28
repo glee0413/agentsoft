@@ -4,6 +4,7 @@ from typing import List,Optional
 
 class Message(BaseModel):
     id: str
+    refer_id:Optional[str] = ""
     meta_info: str
     content: str
     sender_id: str

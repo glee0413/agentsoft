@@ -122,7 +122,7 @@ class LLMAgent(Agent):
     # 负责调用外部大模型
     async def ReceiveMessage(self,message:Message):
         print(f"{datetime.now()}#: {message.content}")
-        answer = self.Conclude(message.content)
+        answer = await self.Conclude(message.content)
         
         reply = Message(
                 id = str(uuid.uuid4()),
@@ -134,26 +134,25 @@ class LLMAgent(Agent):
                 create_timestamp=datetime.now()
             )
         
-        self.PostMessage(message.sender_id,reply)
+        await self.PostMessage(message.sender_id,reply)
         return
     
-    async def PostMessage(self,receive_id,content):
-        self.messenger.apost_message(receive_id = receive_id, content = content)
+    async def PostMessage(self,receive_id:str='all',content : str = ''):
+        await self.messenger.apost_message(receive_id = receive_id, content = content)
         return
     
     async def Conclude(self,content):
         # 总结的函数
+        return 'echo'
         pass
     
     def launch(self):
+        self.messenger.run(sync_run=False)
         return
     
     def stop(self):
         return
     
-    def stop(self):
-        # 停止Agent
-        pass
     
 
 class RLLMAgent():
@@ -163,9 +162,11 @@ class RLLMAgent():
 
 
 def test_agent():
-    agent = EchoAgent('小睿慧聊')
+    #agent = EchoAgent('小睿慧聊')
+    agent = LLMAgent('小睿大模')
     #agent.PostMessage(content = 'echo')
-    asyncio.get_event_loop().run_until_complete(agent.aPostMessage(content='echo'))
+    # asyncio.get_event_loop().run_until_complete(agent.aPostMessage(content='echo'))
+    asyncio.get_event_loop().run_until_complete(agent.PostMessage(content='echo'))
     agent.launch()
     
 

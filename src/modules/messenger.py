@@ -171,6 +171,9 @@ class Messenger:
                 await self.akafka_consumer.start()
                 try:
                     async for msg in self.akafka_consumer:
+                        # await self.akafka_consumer.commit()
+                        # continue
+                    
                         message = Message.model_validate_json(msg.value.decode('utf-8'))
                         print(f'arun: {message}')
                         await self.message_cb(message)
