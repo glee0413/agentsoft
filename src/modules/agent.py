@@ -33,12 +33,12 @@ class HatRack:
         pass
 
 class Agent(ABC):
-    def __init__(self, name, async_mode = False):
+    def __init__(self, name, async_mode = False, profession = 'empty'):
         self.id = str(uuid.uuid4())
         self.name = name
         self.async_mode = async_mode
         self.resume = ''
-        self.profession = 'consultant'
+        self.profession = profession
         # team_id: [agent_a_id,agent_b_id]
         self.teammate = {}
         # 相同职能的人，可相互补充完成同类的问题
@@ -53,7 +53,7 @@ class Agent(ABC):
             id = self.id,
             assign_type='auto'
         )
-        self.post_id = self.messenger.register(lancer_request = lancer_request,
+        self.office_id = self.messenger.register(lancer_request = lancer_request,
             message_cb = self.ReceiveMessage)
         
     @abstractmethod
@@ -117,16 +117,31 @@ class EchoAgent(Agent):
 
 class LLMAgent(Agent):
     def __init__(self, name):
-        super().__init__(name)
+        super().__init__(name,async_mode=True,profession = 'LLM')
         
     # 负责调用外部大模型
     async def ReceiveMessage(self,message:Message):
+        print(f"{datetime.now()}#: {message.content}")
+        answer = self.Conclude(message.content)
+        
+        reply = Message(
+                id = str(uuid.uuid4()),
+                meta_info='',
+                content=answer,
+                sender_id=self.office_id,
+                receive_ids=[message.sender_id],
+                refer_id=message.id,
+                create_timestamp=datetime.now()
+            )
+        
+        self.PostMessage(message.sender_id,reply)
         return
     
-    def PostMessage(self,content):
+    async def PostMessage(self,receive_id,content):
+        self.messenger.apost_message(receive_id = receive_id, content = content)
         return
     
-    def Conclude(self):
+    async def Conclude(self,content):
         # 总结的函数
         pass
     
@@ -150,7 +165,7 @@ class RLLMAgent():
 def test_agent():
     agent = EchoAgent('小睿慧聊')
     #agent.PostMessage(content = 'echo')
-    asyncio.get_event_loop().run_until_complete(agent.aPostMessage('hello'))
+    asyncio.get_event_loop().run_until_complete(agent.aPostMessage(content='echo'))
     agent.launch()
     
 

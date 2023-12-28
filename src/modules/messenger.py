@@ -79,14 +79,17 @@ class Messenger:
                 
         return
     async def apost_message(self,receive_id, content):
-        message = Message(
-            id = str(uuid.uuid4()),
-            meta_info='',
-            content=content,
-            sender_id=self.office_id,
-            receive_ids=[receive_id],
-            create_timestamp=datetime.now()
-        )
+        if isinstance(content,str):
+            message = Message(
+                id = str(uuid.uuid4()),
+                meta_info='',
+                content=content,
+                sender_id=self.office_id,
+                receive_ids=[receive_id],
+                create_timestamp=datetime.now()
+            )
+        elif isinstance(content,Message):
+            message = content
         
         message_str = message.model_dump_json()
         
