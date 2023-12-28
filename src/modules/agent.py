@@ -107,6 +107,10 @@ class EchoAgent(Agent):
         pass
 
 class LLMAgent(Agent):
+    def __init__(self, name):
+        
+        super().__init__(name)
+        
     # 负责调用外部大模型
     def ReceiveMessage(self,message:Message):
         return
@@ -114,11 +118,19 @@ class LLMAgent(Agent):
     def PostMessage(self,content):
         return
     
+    def Conclude(self):
+        # 总结的函数
+        pass
+    
     def launch(self):
         return
     
     def stop(self):
         return
+    
+    def stop(self):
+        # 停止Agent
+        pass
     
 
 class RLLMAgent():

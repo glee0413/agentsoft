@@ -21,7 +21,7 @@ app = FastAPI()
 
 class FreelancerBank():
     def __init__(self) -> None:
-        self.bank = []
+        self.bank:FreelancerInfo = []
         self.teams = []
         self.groups = []
         self.lock = asyncio.Lock()
@@ -51,6 +51,16 @@ class FreelancerBank():
         
         return DeleteLancerResponse(status='Failed')
 
+    def select_lancer_officeids(self, scope):
+        lancer_ids = []
+        if scope == 'all':
+            for lancer in self.bank:
+                if lancer.status != 'die':
+                    lancer_ids.append(lancer.office_id)
+        else:
+            print(f'scope:{scope} type: {type(scope)}')
+            lancer_ids.append(scope)
+        return lancer_ids
     
     def get_profession(profession):
         return
@@ -82,10 +92,15 @@ class FreelancerOffice:
         self.thread_stop = False
     
     def post_message(self,receive_id:str,message:Message):
-        print(f'{datetime.now()}#recieve {receive_id}: {message.model_dump_json()}')
-        message_str = message.model_dump_json()
-        self.kafka_producer.send(message.sender_id,message_str)
-        self.kafka_producer.flush()
+        print(f'{datetime.now()}# send {receive_id}: {message.model_dump_json()}')
+        
+        office_ids = []
+        office_ids = self.lancer_bank.select_lancer_officeids(receive_id)
+        
+        for oid in office_ids:
+            message_str = message.model_dump_json()
+            self.kafka_producer.send(oid,message_str)
+            self.kafka_producer.flush()
     
     # 逻辑处理类
     def message_loop(self):
@@ -105,13 +120,13 @@ class FreelancerOffice:
             message = Message.model_validate_json(msg.value.decode('utf-8'))
 
             if message.content == 'echo':
-                # message.content = 'respect'
-                # message_str = message.model_dump_json()
-                # self.kafka_producer.send(message.sender_id,message_str)
-                # self.kafka_producer.flush()
-                self.post_message(message.sender_id,message)
+                self.post_message(receive_id = message.sender_id,message=message)
                 
             self.kafka_consumer.commit()
+        return
+    
+    def message_process(self,message:Message):
+        
         return
     
     def start_message_loop(self,start : bool = True):

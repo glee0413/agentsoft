@@ -7,7 +7,8 @@ class Message(BaseModel):
     meta_info: str
     content: str
     sender_id: str
-    receive_ids: List[str]
+    team_id:Optional[str] = None
+    receive_ids: List[str] # 
     create_timestamp:  datetime
     
 class Topic:
@@ -44,5 +45,5 @@ class FreelancerInfo(BaseModel):
     office_id: str
     team_id: Optional[List[str]] = None
     group_id: Optional[List[str]]  = None
-    status: Optional[str] = None
+    status: Optional[str] = None # ok,offline,die
     register_time: datetime = Field(default_factory=datetime.utcnow)
