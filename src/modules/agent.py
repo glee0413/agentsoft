@@ -10,6 +10,7 @@ from message import RegisterLancerRequest, RegisterLancerResponse
 import time
 from datetime import datetime
 import asyncio
+from model_center import ModelCenter
 class PromptTemplate:
     def __init__(self, template, parameter):
         self.template = template
@@ -118,21 +119,24 @@ class EchoAgent(Agent):
 class LLMAgent(Agent):
     def __init__(self, name):
         super().__init__(name,async_mode=True,profession = 'LLM')
+        self.llm = ModelCenter()
         
     # 负责调用外部大模型
     async def ReceiveMessage(self,message:Message):
         print(f"{datetime.now()}#: {message.content}")
         answer = await self.Conclude(message.content)
         
-        reply = Message(
-                id = str(uuid.uuid4()),
-                meta_info='',
-                content=answer,
-                sender_id=self.office_id,
-                receive_ids=[message.sender_id],
-                refer_id=message.id,
-                create_timestamp=datetime.now()
-            )
+        # reply = Message(
+        #         id = str(uuid.uuid4()),
+        #         meta_info='',
+        #         content=answer,
+        #         sender_id=self.office_id,
+        #         receive_ids=[message.sender_id],
+        #         refer_id=message.id,
+        #         create_timestamp=datetime.now()
+        #     )
+        reply = message.genereat_reply()
+        reply.content = answer
         
         await self.PostMessage(message.sender_id,reply)
         return
@@ -143,8 +147,8 @@ class LLMAgent(Agent):
     
     async def Conclude(self,content):
         # 总结的函数
-        return 'echo'
-        pass
+        answer = await self.llm.aask(content)
+        return answer
     
     def launch(self):
         self.messenger.run(sync_run=False)

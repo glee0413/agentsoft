@@ -1,7 +1,8 @@
 from datetime import datetime
 from pydantic import BaseModel,Field
 from typing import List,Optional
-
+import uuid
+from datetime import datetime
 class Message(BaseModel):
     id: str
     refer_id:Optional[str] = ""
@@ -11,6 +12,20 @@ class Message(BaseModel):
     team_id:Optional[str] = None
     receive_ids: List[str] # 
     create_timestamp:  datetime
+    
+    #@staticmethod
+    def genereat_reply(self):
+        reply = Message(
+            id = str(uuid.uuid4()),
+            refer_id = self.id,
+            meta_info='',
+            content='',
+            sender_id='',
+            team_id=self.team_id,
+            receive_ids=[self.sender_id],
+            create_timestamp=datetime.now())
+        return reply
+        
     
 class Topic:
     def __init__(self, id, name):
