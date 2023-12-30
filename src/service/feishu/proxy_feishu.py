@@ -48,8 +48,8 @@ class FeishuProxy(Proxy):
         return message
     
     
-    async def receive_office(self):
-        print('')
+    async def receive_office(self,message:Message):
+        print(f'receive message from office: {message.content}')
         pass
     
     async def launch(self):
@@ -87,6 +87,7 @@ proxy = FeishuProxy('Feishu',profession='LLM')
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await proxy.launch()
+    print(f'life span lanched')
     yield
 
 app = FastAPI(lifespan=lifespan)
