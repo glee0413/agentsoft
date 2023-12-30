@@ -9,12 +9,13 @@ from dotenv import load_dotenv
 import os
 import json
 import threading
-from message import Message,RegisterLancerRequest,RegisterLancerResponse,DeleteLancerResponse,FreelancerInfo
+
 
 from kafka import KafkaProducer,KafkaConsumer
 from pydantic import BaseModel
 from typing import List,Optional
 from utils import custom_value_serializer
+from message import Message,RegisterLancerRequest,RegisterLancerResponse,DeleteLancerResponse,FreelancerInfo
 
 app = FastAPI()
 
@@ -25,17 +26,29 @@ class FreelancerBank():
         self.teams = []
         self.groups = []
         self.lock = asyncio.Lock()
+        self.agent_idx = 0
+        self.proxy_idx = 0
     
     async def register(self,request:RegisterLancerRequest):
         async with self.lock:
             for lancer in self.bank:
                 if lancer.id == request.id:
+                    print(f'lancer request {request.id} repeat')
                     return '-1'
-            office_id = f'office.{str(uuid.uuid4())}'
-            office_test_id = 'lancer.123'
+            # office_id = f'office.{str(uuid.uuid4())}'
+            # office_test_id = 'lancer.123'
+            if request.type == 'agent':
+                office_id = f'{request.type}.{request.profession}.{self.agent_idx}'
+                self.agent_idx += 1
+            elif request.type == 'proxy':
+                office_id = f'{request.type}.{request.profession}.{self.proxy_idx}'
+                self.proxy_idx += 1
+            else:
+                print(f'Invalid type {request.type}')
+                return '-1'
             
             new_lancer = FreelancerInfo(profession = request.profession,
-                name = request.name,office_id = office_test_id, 
+                name = request.name,office_id = office_id, 
                 id = request.id,register_time=datetime.utcnow())
                         
             self.bank.append(new_lancer)
@@ -103,6 +116,7 @@ class FreelancerOffice:
             self.kafka_producer.flush()
     
     # 逻辑处理类
+    #TODO: 消息分为两种：1，自己主动发送的给各个lancer的消息，2代理外部agent的消息，不使用内部的消息格式和通讯机制
     def message_loop(self):
         print(f'message loop start')
         for msg in self.kafka_consumer:
@@ -121,6 +135,7 @@ class FreelancerOffice:
 
             if message.content == 'echo':
                 self.post_message(receive_id = message.sender_id,message=message)
+            
                 
             self.kafka_consumer.commit()
         return

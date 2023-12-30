@@ -9,8 +9,8 @@ import uuid
 import requests
 from datetime import datetime
 import time
-from message import Message,RegisterLancerRequest, RegisterLancerResponse
-from utils import custom_value_serializer
+from modules.message import Message,RegisterLancerRequest, RegisterLancerResponse
+from modules.utils import custom_value_serializer
 class Messenger:
     def __init__(self,agent_id,group_id,async_mode = False):
         # 初始化kafka
@@ -18,15 +18,20 @@ class Messenger:
         self.async_mode = async_mode
         self.kafka_address =  os.getenv('KAFKA_ADDRESS')
         self.lancer_office_address = os.getenv('LANCER_OFFICE')
+        self.group_id = group_id
+        
+        self.post_address = ""
+        self.office_id = ""
+        self.agent_id = agent_id
+        self.message_cb = None
         
         if self.async_mode:
-            self.consumer_task = asyncio.ensure_future(self.create_async_kafka(group_id))
-            asyncio.get_event_loop().run_until_complete(self.consumer_task)
+            #self.consumer_task = asyncio.ensure_future(self.create_async_kafka(group_id))
+            pass
         else:
+            print(f'Create sync kafka')
             self.kafka_producer = KafkaProducer(bootstrap_servers=self.kafka_address,
                             value_serializer=custom_value_serializer)
-                            #value_serializer=str.encode)
-                            #value_serializer=lambda m: json.dumps(m).encode())
                         
             self.kafka_consumer = KafkaConsumer(
                 bootstrap_servers=self.kafka_address,
@@ -38,22 +43,23 @@ class Messenger:
         # asyncio.run ok
         # self.consumer_task = asyncio.run(self.create_async_consumer(group_id)) 
         
-        self.post_address = ""
-        self.office_id = ""
-        self.agent_id = agent_id
-        self.message_cb = None
+        
     
-    async def create_async_kafka(self,group_id):
-        print('create async consumer')
+    async def create_async_kafka(self,group_id,loop = None):
+        print(f'create async consumer event_loopid {id(loop)} running loop id {id(asyncio.get_running_loop())}')
         self.akafka_consumer = AIOKafkaConsumer(
             bootstrap_servers=self.kafka_address,
             auto_offset_reset = 'earliest',
             enable_auto_commit=False,
-            group_id = group_id
+            group_id = group_id,
+            loop=loop
         )
         
+        if self.office_id != '' and self.office_id != '-1':
+            self.akafka_consumer.subscribe(topics=[self.office_id],listener=None)
+        
         self.akafka_producer = AIOKafkaProducer(bootstrap_servers=self.kafka_address,
-                            value_serializer=custom_value_serializer)
+                            value_serializer=custom_value_serializer,loop=loop)
         await self.akafka_producer.start()
 
     def post_message(self,receive_id, content):
@@ -107,10 +113,10 @@ class Messenger:
         if message_cb:
             self.message_cb = message_cb
         
-      
         #通过名字注册一个ID            
         response = requests.post(f'{self.lancer_office_address}/lancer',json = lancer_request.model_dump())
         if response.status_code != 200:
+            print('Register to office failed')
             return -1
         
         lancer_response = RegisterLancerResponse(**response.json())
@@ -125,25 +131,33 @@ class Messenger:
             # asyncio.get_event_loop().run_until_complete(
             #     self.akafka_consumer.subscribe(topics=[self.office_id],listener=None)        
             # )
-            self.akafka_consumer.subscribe(topics=[self.office_id],listener=None)        
+            # self.akafka_consumer.subscribe(topics=[self.office_id],listener=None)  
+            # self.akafka_consumer.subscribe(topics=[self.office_id],listener=None)      
+            pass
         else:
             self.kafka_consumer.subscribe(topics=[self.office_id],listener=None)
-        
-
 
         return lancer_response.office_id
     
     def unregister(self,topic):
         return
 
-    async def arun(self):
+    async def arun(self,loop=None):
         #async def consume_message(self):
-        print(f'arun start')
+        print(f'arun start ,current loop {id(loop)},{id(asyncio.get_event_loop())}')
+        if not loop:
+            loop = asyncio.get_event_loop()
+        await self.create_async_kafka(loop)
+        print(f'create_async_kafka ok ')
         await self.akafka_consumer.start()
+        print(f'akafka_consumer.start ok ')
+        return
         try:
             async for msg in self.akafka_consumer:
                 message = Message.model_validate_json(msg.value.decode('utf-8'))
                 print(f'arun: {message}')
+                await self.message_cb(message)
+                await self.akafka_consumer.commit()
         finally:
             await self.akafka_consumer.stop()
                     

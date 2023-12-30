@@ -1,16 +1,16 @@
 import sys
 # print(sys.path)
 
-from messenger import Messenger
-from message import Message
 import uuid
 from abc import ABC, abstractmethod
-from message import RegisterLancerRequest, RegisterLancerResponse
 
 import time
 from datetime import datetime
 import asyncio
-from model_center import ModelCenter
+from modules.model_center import ModelCenter
+from modules.messenger import Messenger
+from modules.message import Message,RegisterLancerRequest, RegisterLancerResponse
+
 class PromptTemplate:
     def __init__(self, template, parameter):
         self.template = template
@@ -82,7 +82,7 @@ class Agent(ABC):
 
 class EchoAgent(Agent):
     def __init__(self, name):
-        super().__init__(name,async_mode=True)
+        super().__init__(name)
     
     # 如使用异步方式，在lanch函数里面要用调用异步run方式
     async def ReceiveMessage(self, message: Message):
@@ -120,6 +120,10 @@ class LLMAgent(Agent):
     def __init__(self, name):
         super().__init__(name,async_mode=True,profession = 'LLM')
         self.llm = ModelCenter()
+        
+        asyncio.get_event_loop().run_until_complete(
+            self.messenger.create_async_kafka(asyncio.get_event_loop())
+        )
         
     # 负责调用外部大模型
     async def ReceiveMessage(self,message:Message):
@@ -166,12 +170,15 @@ class RLLMAgent():
 
 
 def test_agent():
-    #agent = EchoAgent('小睿慧聊')
+    agent = EchoAgent('小睿慧聊')
+    agent.PostMessage(content = 'echo')
+    
     agent = LLMAgent('小睿大模')
     #agent.PostMessage(content = 'echo')
-    # asyncio.get_event_loop().run_until_complete(agent.aPostMessage(content='echo'))
     asyncio.get_event_loop().run_until_complete(agent.PostMessage(content='echo'))
-    agent.launch()
+    
+    # asyncio.get_event_loop().run_until_complete(agent.PostMessage(content='echo'))
+    # agent.launch()
     
 
 if __name__ == "__main__":

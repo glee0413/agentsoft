@@ -42,6 +42,8 @@ class RegisterLancerRequest(BaseModel):
     name: str
     id: str
     assign_type: str #auto自动分配，pm指定
+    type:Optional[str] = 'agent' # proxy,agent
+    
     
 
 class RegisterLancerResponse(BaseModel):
