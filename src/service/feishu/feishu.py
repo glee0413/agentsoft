@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, BackgroundTasks
 from fastapi import HTTPException
 from pydantic import BaseModel
 
@@ -9,6 +9,7 @@ import time
 import os
 from event import EventHandler, EventPack, ChallengeVerification
 import json
+import asyncio
 
 app = FastAPI()
 
@@ -47,14 +48,17 @@ async def url_verification(request: PostRequest):
 # Union[ChallengeVerification, EventPack]
 
 @app.post("/event_notifier")
-async def event_notifier(request: Request , event: EventPack):
+async def event_notifier(request: Request , event: Union[ChallengeVerification, EventPack],background_tasks: BackgroundTasks):
     if isinstance(event,ChallengeVerification):
-        print("event is ChallengeVerification")
+        print(f"event is ChallengeVerification : {event.challenge}")
+        await asyncio.sleep(10)
+
         return ResponseResult(challenge=event.challenge)
     elif isinstance(event, EventPack):
         print(f'schema: {event.schema_v}')
         print(f'event type: {event.header.event_type}')
-        await event_handler.dispatch(event)
+        # await event_handler.dispatch(event)
+        background_tasks.add_task(event_handler.dispatch,event)
     else:
         print("impossible event")
 
@@ -109,12 +113,14 @@ def message_receive_event_handler(req_data: dict):
     return {}
 
 def main_test_config():
-    print(env_config.APP_ID)
-    print(env_config.APP_SECRET)
-    print(env_config.VERIFICATION_TOKEN)
-    print(env_config.ENCRYPT_KEY)
-    print(env_config.LARK_HOST)
+    # print(env_config.APP_ID)
+    # print(env_config.APP_SECRET)
+    # print(env_config.VERIFICATION_TOKEN)
+    # print(env_config.ENCRYPT_KEY)
+    # print(env_config.LARK_HOST)
+    pass
 
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8264)
+
