@@ -4,6 +4,9 @@ import json
 from api import MessageApiClient
 from pydantic_settings import BaseSettings
 import time
+import asyncio
+import concurrent.futures
+
 class ChallengeVerification(BaseModel):
     challenge: str
     token: str
@@ -83,32 +86,64 @@ class MessageRecord():
             return True
         else:
             return False
+    def delete_message(self, message_id):
+        self.message_list.pop(message_id)
+
+
 
 class EventHandler():
     def __init__(self) -> None:
         self.message_record = MessageRecord()
+        self.event_loop = asyncio.get_event_loop()
         pass
     
-    async def dispatch(self, event_box: EventPack):
+    def answer_deeply(self,message_id:str, open_id:str, questen:str):
+        time.sleep(10)
+        print('answer_deeply awake')
+        return 'OK'
+    
+        message_api_client.send_text_with_open_id(open_id, questen)
+        self.message_record.delete_message(message_id)
+        return
+    
+    def dispatch(self, event_box: EventPack):
         # print(f'header:event_type:{event_box.header.event_type}, eventid:{event_box.header.event_id}')
         # print(f'event: {event_box.event.sender.sender_id}_{event_box.event.message.chat_type} : {event_box.event.message.content}')
         # print(f"message: {event_box.event.message.message_id}")
         
         #print(event_box)
         
-        if self.message_record.message_exist(event_box.event.message.message_id):
-            print(f'Message {event_box.event.message.message_id} exist')
-            return
+        # if self.message_record.message_exist(event_box.event.message.message_id):
+        #     print(f'Message {event_box.event.message.message_id} exist')
+        #     return
         self.message_record.add_message(event_box)
         
-        print(event_box.model_dump_json(indent=4))
-        time.sleep(10)
-        message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
-                                                  event_box.event.message.content)
+        # print(event_box.model_dump_json(indent=4))
+        
+        print(f'dispatch message:')
+        
+        # message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
+        #                                           event_box.event.message.content)
+        
+        # loop = asyncio.get_event_loop()
+        
+        # answer_futrue = loop.run_in_executor(None,self.answer_deeply,
+        #                                      event_box.event.message.message_id,
+        #                                      event_box.event.sender.sender_id.open_id,
+        #                                      event_box.event.message.content
+        #                                      )
+        
+        # await answer_futrue
+        
+        self.answer_deeply(event_box.event.message.message_id,
+                        event_box.event.sender.sender_id.open_id,
+                        event_box.event.message.content)
+        
+        
         return
     
 test_json="""
-    {
+{
     "schema": "2.0",
     "header": {
         "event_id": "5e3702a84e847582be8db7fb73283c02",
