@@ -141,6 +141,17 @@ class Messenger:
     
     def unregister(self,topic):
         return
+    
+    async def aconsumer_kafka_message(self):
+        print(f'consumer message begin')
+        try:
+            async for msg in self.akafka_consumer:
+                message = Message.model_validate_json(msg.value.decode('utf-8'))
+                print(f'arun: {message}')
+                await self.message_cb(message)
+                await self.akafka_consumer.commit()
+        finally:
+            await self.akafka_consumer.stop()
 
     async def arun(self,loop=None):
         #async def consume_message(self):
@@ -151,6 +162,9 @@ class Messenger:
         print(f'create_async_kafka ok ')
         await self.akafka_consumer.start()
         print(f'akafka_consumer.start ok ')
+        
+        asyncio.create_task(self.aconsumer_kafka_message())
+        print(f'aconsumer_kafka_message task create')
         return
         try:
             async for msg in self.akafka_consumer:
