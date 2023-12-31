@@ -11,6 +11,7 @@ from datetime import datetime
 import time
 from modules.message import Message,RegisterLancerRequest, RegisterLancerResponse
 from modules.utils import custom_value_serializer
+from loguru import logger
 class Messenger:
     def __init__(self,agent_id,group_id,async_mode = False):
         # 初始化kafka
@@ -29,7 +30,7 @@ class Messenger:
             #self.consumer_task = asyncio.ensure_future(self.create_async_kafka(group_id))
             pass
         else:
-            print(f'Create sync kafka')
+            logger.info(f'Create sync kafka..')
             self.kafka_producer = KafkaProducer(bootstrap_servers=self.kafka_address,
                             value_serializer=custom_value_serializer)
                         
@@ -46,7 +47,7 @@ class Messenger:
         
     
     async def create_async_kafka(self,group_id,loop = None):
-        print(f'create async consumer event_loopid {id(loop)} running loop id {id(asyncio.get_running_loop())}')
+        logger.debug(f'create async consumer event_loopid {id(loop)} running loop id {id(asyncio.get_running_loop())}')
         self.akafka_consumer = AIOKafkaConsumer(
             bootstrap_servers=self.kafka_address,
             auto_offset_reset = 'earliest',
@@ -75,7 +76,7 @@ class Messenger:
         
         message_str = message.model_dump_json()
         
-        print(f"{datetime.now()} #send to {self.post_address} : {message_str}")
+        logger.info(f"send to {self.post_address} : {message_str}")
         self.kafka_producer.send(
             self.post_address,
             #dict(message)
@@ -85,6 +86,7 @@ class Messenger:
                 
         return
     async def apost_message(self,receive_id, content):
+        logger.trace(f'')
         if isinstance(content,str):
             message = Message(
                 id = str(uuid.uuid4()),
@@ -99,13 +101,12 @@ class Messenger:
         
         message_str = message.model_dump_json()
         
-        print(f"{datetime.now()} #send to {self.post_address} : {message_str}")
         await self.akafka_producer.send_and_wait(
             self.post_address,
             #dict(message)
             value=message_str
         )
-        print(f'send over')
+        logger.info(f"send to {self.post_address} : {message_str}")
         await self.akafka_producer.flush()
 
     def register(self, lancer_request:RegisterLancerRequest, message_cb=None):
@@ -155,16 +156,14 @@ class Messenger:
 
     async def arun(self,loop=None):
         #async def consume_message(self):
-        print(f'arun start ,current loop {id(loop)},{id(asyncio.get_event_loop())}')
+        logger.info(f'arun start ,current loop {id(loop)},{id(asyncio.get_event_loop())}')
         if not loop:
             loop = asyncio.get_event_loop()
         await self.create_async_kafka(loop)
-        print(f'create_async_kafka ok ')
         await self.akafka_consumer.start()
-        print(f'akafka_consumer.start ok ')
         
         asyncio.create_task(self.aconsumer_kafka_message())
-        print(f'aconsumer_kafka_message task create')
+        logger.info(f'aconsumer_kafka_message task create')
         return
         try:
             async for msg in self.akafka_consumer:
@@ -203,7 +202,7 @@ class Messenger:
                         # continue
                     
                         message = Message.model_validate_json(msg.value.decode('utf-8'))
-                        print(f'arun: {message}')
+                        logger.info(f'arun: {message}')
                         await self.message_cb(message)
                         await self.akafka_consumer.commit()
                 finally:

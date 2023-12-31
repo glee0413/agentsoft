@@ -10,6 +10,7 @@ import asyncio
 from modules.model_center import ModelCenter
 from modules.messenger import Messenger
 from modules.message import Message,RegisterLancerRequest, RegisterLancerResponse
+from loguru import logger
 
 class PromptTemplate:
     def __init__(self, template, parameter):
@@ -140,7 +141,9 @@ class LLMAgent(Agent):
         #         create_timestamp=datetime.now()
         #     )
         reply = message.genereat_reply()
+        reply.sender_id = self.office_id
         reply.content = answer
+        logger.info(f'type: {type(reply.content)}')
         
         await self.PostMessage(message.sender_id,reply)
         return
@@ -151,6 +154,7 @@ class LLMAgent(Agent):
     
     async def Conclude(self,content):
         # 总结的函数
+        
         answer = await self.llm.aask(content)
         return answer
     
@@ -170,8 +174,8 @@ class RLLMAgent():
 
 
 def test_agent():
-    agent = EchoAgent('小睿慧聊')
-    agent.PostMessage(content = 'echo')
+    # agent = EchoAgent('小睿慧聊')
+    # agent.PostMessage(content = 'echo')
     
     agent = LLMAgent('小睿大模')
     #agent.PostMessage(content = 'echo')
@@ -180,6 +184,11 @@ def test_agent():
     # asyncio.get_event_loop().run_until_complete(agent.PostMessage(content='echo'))
     # agent.launch()
     
+    
+
+def main():
+    agent = LLMAgent('小睿大模')
+    agent.launch()
 
 if __name__ == "__main__":
-    test_agent()
+    main()

@@ -10,7 +10,7 @@ class Message(BaseModel):
     content: str
     sender_id: str
     team_id:Optional[str] = None
-    receive_ids: List[str] # 
+    receive_ids: List[str] # 发送给office进行转发的
     create_timestamp:  datetime
     
     #@staticmethod
@@ -65,3 +65,4 @@ class FreelancerInfo(BaseModel):
     group_id: Optional[List[str]]  = None
     status: Optional[str] = None # ok,offline,die
     register_time: datetime = Field(default_factory=datetime.utcnow)
+    type:str

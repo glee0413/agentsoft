@@ -22,15 +22,15 @@ class Proxy(ABC):
         )
         
         self.office_id = self.messenger.register(lancer_request = lancer_request,
-            message_cb = self.receive_office)
+            message_cb = self.receive_office_message)
         
     
     @abstractmethod
-    async def send_office(self,content):
+    async def send_office_message(self,content):
         pass
     
     @abstractmethod
-    async def receive_office(self,message:Message):
+    async def receive_office_message(self,message:Message):
         print(message.model_dump_json())
         pass
     
