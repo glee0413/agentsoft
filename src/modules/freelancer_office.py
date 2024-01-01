@@ -180,6 +180,9 @@ class FreelancerOffice:
                 message.receive_ids = [message.sender_id]
                 self.post_message(receive_id = receive_id,message=message)
         else:
+            if message.refer_id not in self.question_dict:
+                logger.error(f'Unkown reply to question {message.refer_id}')
+                return
             receive_id = self.question_dict[message.refer_id]
             message.sender_id = self.post_address
             self.post_message(receive_id = receive_id,message=message)
