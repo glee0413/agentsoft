@@ -38,7 +38,7 @@ class FeishuProxy(Proxy):
     def __init__(self, name, profession='LLM'):
         super().__init__(name, profession)
         self.feishu_event = []
-        print('hello')
+        self.event_hander = EventHandler()
         pass
         
     async def send_office_message(self,content):
@@ -58,12 +58,29 @@ class FeishuProxy(Proxy):
     
     async def receive_office_message(self,message:Message):
         logger.info(f'receive message from office: {message.content}')
+        #TODO: 发送给飞书
+        self.reply_feishu(message=message)
         pass
     
     async def launch(self):
         await self.messenger.arun()
         pass
     
+    
+    ### 处理与飞书的逻辑
+    
+    async def reply_feishu(self,message:Message):
+        event = None
+        for ev in self.feishu_event:
+            if message.refer_id == ev['office_message'].id:
+                event = ev
+                break
+        if not event:
+            logger.error(f'Unknonw message {message}')
+            return
+        
+        self.event_hander.areply(event_box=event,reply_content=message.content)
+        return
     
     async def event_chat(self,event:EventPack):
         message = await self.send_office_message(event.event.message.content)
