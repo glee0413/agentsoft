@@ -59,7 +59,7 @@ class FeishuProxy(Proxy):
     async def receive_office_message(self,message:Message):
         logger.info(f'receive message from office: {message.content}')
         #TODO: 发送给飞书
-        self.reply_feishu(message=message)
+        await self.reply_feishu(message=message)
         pass
     
     async def launch(self):
@@ -75,6 +75,7 @@ class FeishuProxy(Proxy):
             if message.refer_id == ev['office_message'].id:
                 event = ev
                 break
+            
         if not event:
             logger.error(f'Unknonw message {message}')
             return
