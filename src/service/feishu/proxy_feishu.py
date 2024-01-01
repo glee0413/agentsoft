@@ -75,7 +75,7 @@ class FeishuProxy(Proxy):
         event = None
         for ev in self.feishu_event:
             if message.refer_id == ev['office_message'].id:
-                event = ev
+                event = ev['app_event']
                 break
             
         if not event:
