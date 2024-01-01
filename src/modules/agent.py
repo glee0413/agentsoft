@@ -125,7 +125,7 @@ class LLMAgent(Agent):
         asyncio.get_event_loop().run_until_complete(
             self.messenger.create_async_kafka(asyncio.get_event_loop())
         )
-        self.debug = True
+        self.debug = False
         
     # 负责调用外部大模型
     async def ReceiveMessage(self,message:Message):
