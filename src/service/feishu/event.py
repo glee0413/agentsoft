@@ -123,27 +123,21 @@ class EventHandler():
             #     self.dumb_reply(event_box.event.sender.sender_id.open_id, 
             #                                         event_box.event.message.content)
             # )
-            loop.run_until_complete(
-                # message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
-                #                                     event_box.event.message.content)
-                
-                await loop.run_in_executor(
+            await loop.run_in_executor(
                     None,self.dumb_reply,
                     event_box.event.sender.sender_id.open_id, 
                     event_box.event.message.content
                 )
-            )
         else:
-            loop.run_until_complete(
-                # message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
-                #                                     event_box.event.message.content)
-                
-                await loop.run_in_executor(
+            # loop.run_until_complete(
+            #     message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
+            #                                         event_box.event.message.content)
+            # )
+            await loop.run_in_executor(
                     None,message_api_client.send_text_with_open_id,
                     event_box.event.sender.sender_id.open_id, 
                     event_box.event.message.content
                 )
-            )
     
     def dispatch(self, event_box: EventPack):
         # print(f'header:event_type:{event_box.header.event_type}, eventid:{event_box.header.event_id}')
