@@ -1,1 +1,1 @@
-export PYTHONPATH=/home/agent/workspace/agentsoft/src:${PYTHONPATH}
+export PYTHONPATH=${HOME}/workspace/agentsoft/src:${PYTHONPATH}
