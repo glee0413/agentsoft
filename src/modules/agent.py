@@ -125,21 +125,13 @@ class LLMAgent(Agent):
         asyncio.get_event_loop().run_until_complete(
             self.messenger.create_async_kafka(asyncio.get_event_loop())
         )
+        self.debug = True
         
     # 负责调用外部大模型
     async def ReceiveMessage(self,message:Message):
         print(f"{datetime.now()}#: {message.content}")
         answer = await self.Conclude(message.content)
         
-        # reply = Message(
-        #         id = str(uuid.uuid4()),
-        #         meta_info='',
-        #         content=answer,
-        #         sender_id=self.office_id,
-        #         receive_ids=[message.sender_id],
-        #         refer_id=message.id,
-        #         create_timestamp=datetime.now()
-        #     )
         reply = message.genereat_reply()
         reply.sender_id = self.office_id
         reply.content = answer
@@ -154,6 +146,10 @@ class LLMAgent(Agent):
     
     async def Conclude(self,content):
         # 总结的函数
+        
+        if self.debug == True:
+            answer = f'agent reply:{content}'
+            return answer
         
         answer = await self.llm.aask(content)
         return answer
