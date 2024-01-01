@@ -95,6 +95,8 @@ class EventHandler():
     def __init__(self) -> None:
         self.message_record = MessageRecord()
         self.event_loop = asyncio.get_event_loop()
+        # 可通过freelancer进行通知，改变状态
+        self.debug = True
         pass
     
     def answer_deeply(self,message_id:str, open_id:str, questen:str):
@@ -105,6 +107,27 @@ class EventHandler():
         message_api_client.send_text_with_open_id(open_id, questen)
         self.message_record.delete_message(message_id)
         return
+    
+    def dumb_reply(self,openid,content):
+        print(f'{openid} : {content}')
+    
+    async def areply(self,event_box,reply_content):
+        
+        loop = asyncio.get_event_loop()
+        # loop.run_until_complete(
+        #     message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
+        #                                            event_box.event.message.content)
+        # )
+        if self.debug:
+            loop.run_until_complete(
+                self.dumb_reply(event_box.event.sender.sender_id.open_id, 
+                                                    event_box.event.message.content)
+            )
+        else:
+            loop.run_until_complete(
+                message_api_client.send_text_with_open_id(event_box.event.sender.sender_id.open_id, 
+                                                    event_box.event.message.content)
+            )
     
     def dispatch(self, event_box: EventPack):
         # print(f'header:event_type:{event_box.header.event_type}, eventid:{event_box.header.event_id}')

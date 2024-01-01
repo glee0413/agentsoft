@@ -9,7 +9,7 @@ from typing import Union
 import uvicorn
 
 import os
-from event import EventHandler, EventPack, ChallengeVerification
+from event import EventHandler, EventPack, ChallengeVerification, test_json
 import json
 import asyncio
 import threading
@@ -19,7 +19,6 @@ from modules.message import Message
 import uuid
 from datetime import datetime
 from loguru import logger
-
 
 class PostRequest(BaseModel):
         challenge: str
@@ -39,6 +38,9 @@ class FeishuProxy(Proxy):
         super().__init__(name, profession)
         self.feishu_event = []
         self.event_hander = EventHandler()
+        
+        # event_dict = json.loads(test_json)
+        # self.test_event = EventPack(**event_dict)
         pass
         
     async def send_office_message(self,content):
@@ -90,6 +92,9 @@ class FeishuProxy(Proxy):
         
         return
     
+    async def chat_history(self):
+        return self.feishu_event
+    
     # @app.post("/event_notifier")
     # async def event_notifier(request: Request , event: Union[ChallengeVerification, EventPack],background_tasks: BackgroundTasks):
     #     if isinstance(event,ChallengeVerification):
@@ -132,6 +137,8 @@ async def reach_chat(request: Request , event: Union[ChallengeVerification, Even
     if isinstance(event,ChallengeVerification):
         logger.debug(f"event is ChallengeVerification : {event.challenge}")
         await proxy.send_office_message(event.challenge)
+        #proxy.test_event.event.message.content = event.challenge
+        #await proxy.event_chat(event=proxy.test_event)
         return ResponseResult(challenge=event.challenge)
     elif isinstance(event, EventPack):
         logger.debug(f'schema: {event.schema_v}')
@@ -145,6 +152,11 @@ async def reach_chat(request: Request , event: Union[ChallengeVerification, Even
     # print(json.dumps(event,indent=2))
     
     return {}
+
+@app.get("/proxy/chat_history")
+async def proxy_chat_history():
+    history = await proxy.chat_history()
+    return history
 
 def main():
     logger.info('Feishu Proxy start')
