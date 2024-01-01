@@ -134,11 +134,12 @@ class EventHandler():
             #                                         event_box.event.message.content)
             # )
             logger.info(f'message:{reply_content} ,event {event_box.event.message.content}')
+            feishu_content = {'text':f'{reply_content}'}
             await loop.run_in_executor(
                     None,message_api_client.send_text_with_open_id,
                     event_box.event.sender.sender_id.open_id, 
                     #event_box.event.message.content
-                    reply_content
+                    feishu_content
                 )
     
     def dispatch(self, event_box: EventPack):
