@@ -1,0 +1,31 @@
+
+# ui
+gradio
+
+# RAG
+llama-index
+chromadb
+jina
+# toolchain
+pypdf
+
+# middleware
+kafka-python
+
+# web
+fastapi
+uvicorn
+requests
+pydantic-settings
+pycryptodome
+httpx
+
+# ai
+langchain
+docarray
+tiktoken
+qianfan
+
+#utils
+loguru
+bidict
