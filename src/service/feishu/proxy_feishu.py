@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Union
 
 import uvicorn
-import time
+
 import os
 from event import EventHandler, EventPack, ChallengeVerification
 import json
@@ -18,6 +18,7 @@ from modules.proxy import Proxy
 from modules.message import Message
 import uuid
 from datetime import datetime
+from loguru import logger
 
 
 class PostRequest(BaseModel):
@@ -27,14 +28,20 @@ class PostRequest(BaseModel):
 
 class ResponseResult(BaseModel):
     challenge: str
+    
+class MessageRecord(BaseModel):
+    role: str
+    message: Message
+    event:EventPack
 
 class FeishuProxy(Proxy):
     def __init__(self, name, profession='LLM'):
         super().__init__(name, profession)
-        #self.message_loop_thread = threading.Thread(target=self.message_loop)
-        self.feishu_event = {}
-    
-    async def send_office(self,content):
+        self.feishu_event = []
+        print('hello')
+        pass
+        
+    async def send_office_message(self,content):
         message = Message(
                 id = str(uuid.uuid4()),
                 refer_id='',
@@ -44,12 +51,13 @@ class FeishuProxy(Proxy):
                 receive_ids=[self.profession],
                 create_timestamp=datetime.now()
             )
+        
         await self.messenger.apost_message(receive_id = self.profession, content = message)
         return message
     
     
-    async def receive_office(self,message:Message):
-        print(f'receive message from office: {message.content}')
+    async def receive_office_message(self,message:Message):
+        logger.info(f'receive message from office: {message.content}')
         pass
     
     async def launch(self):
@@ -58,8 +66,9 @@ class FeishuProxy(Proxy):
     
     
     async def event_chat(self,event:EventPack):
-        message = await self.send_office(event.event.message.content)
-        self.feishu_event[message.id] = {'office_message':message,'app_event':event}
+        message = await self.send_office_message(event.event.message.content)
+        #self.feishu_event[message.id] = {'office_message':message,'app_event':event}
+        self.feishu_event.append({'office_message':message,'app_event':event})
         
         return
     
@@ -83,16 +92,17 @@ class FeishuProxy(Proxy):
     #     return {}
 
 proxy = FeishuProxy('Feishu',profession='LLM')
+logger.info('FeishuProxy init ok')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await proxy.launch()
-    print(f'life span lanched')
+    logger.info(f'Fastapi lifespace start')
     yield
 
 app = FastAPI(lifespan=lifespan)
 #app = FastAPI()
-print('Fastapi init')
+logger.info('Fastapi init')
 
 
 # @app.on_event("startup")
@@ -102,25 +112,24 @@ print('Fastapi init')
 @app.post("/reach/chat")
 async def reach_chat(request: Request , event: Union[ChallengeVerification, EventPack],background_tasks: BackgroundTasks):
     if isinstance(event,ChallengeVerification):
-        print(f"event is ChallengeVerification : {event.challenge}")
-        await proxy.send_office(event.challenge)
+        logger.debug(f"event is ChallengeVerification : {event.challenge}")
+        await proxy.send_office_message(event.challenge)
         return ResponseResult(challenge=event.challenge)
     elif isinstance(event, EventPack):
-        print(f'schema: {event.schema_v}')
-        print(f'event type: {event.header.event_type}')
+        logger.debug(f'schema: {event.schema_v}')
+        logger.debug(f'event type: {event.header.event_type}')
         # await event_handler.dispatch(event)
         #background_tasks.add_task(event_handler.dispatch,event)
         await proxy.event_chat(event=event)
     else:
-        print("impossible event")
+        logger.error("impossible event type")
 
     # print(json.dumps(event,indent=2))
     
     return {}
 
-
 def main():
-    print('Feishu Proxy start')
+    logger.info('Feishu Proxy start')
     uvicorn.run(app, host="0.0.0.0", port=8270)
     return
 
@@ -132,4 +141,8 @@ def main():
 
 if __name__ == "__main__":
     # asyncio.run(amain())
+    #DEBUG: 暂时关闭文件读写
+    #logger.add(sys.stderr, level="INFO")
+
+    #logger.add(os.path.basename(__file__)+'.log',backtrace=True, diagnose=True,rotation="500 MB")
     main()
