@@ -96,7 +96,7 @@ class EventHandler():
         self.message_record = MessageRecord()
         self.event_loop = asyncio.get_event_loop()
         # 可通过freelancer进行通知，改变状态
-        self.debug = True
+        self.debug = False
         pass
     
     def answer_deeply(self,message_id:str, open_id:str, questen:str):

@@ -82,7 +82,7 @@ class FeishuProxy(Proxy):
             logger.error(f'Unknonw message {message}')
             return
         
-        self.event_hander.areply(event_box=event,reply_content=message.content)
+        await self.event_hander.areply(event_box=event,reply_content=message.content)
         return
     
     async def event_chat(self,event:EventPack):
