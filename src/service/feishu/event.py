@@ -136,7 +136,7 @@ class EventHandler():
             await loop.run_in_executor(
                     None,message_api_client.send_text_with_open_id,
                     event_box.event.sender.sender_id.open_id, 
-                    reply_content
+                    event_box.event.message.content
                 )
     
     def dispatch(self, event_box: EventPack):
