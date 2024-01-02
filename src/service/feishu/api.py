@@ -20,9 +20,12 @@ class MessageApiClient(object):
     @property
     def tenant_access_token(self):
         return self._tenant_access_token
-
+    #refer： https://open.feishu.cn/document/server-docs/im-v1/message/create?appId=cli_a519c0462ff9500d
     def send_text_with_open_id(self, open_id, content):
         self.send("open_id", open_id, "text", content)
+        
+    def send_text_with_chat_id(self, chat_id, content):
+        self.send("chat_id", chat_id, "text", content)
 
     def send(self, receive_id_type, receive_id, msg_type, content):
         # send message to user, implemented based on Feishu open api capability. doc link: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create
