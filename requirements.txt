@@ -29,3 +29,6 @@ qianfan
 #utils
 loguru
 bidict
+
+# database
+sqlalchemy
