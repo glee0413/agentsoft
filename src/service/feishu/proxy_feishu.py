@@ -9,7 +9,7 @@ from typing import Union
 import uvicorn
 
 import os
-from event import EventHandler, EventPack, ChallengeVerification, test_json
+from event import EventHandler, EventPack, ChallengeVerification, test_chat_json
 import json
 import asyncio
 import threading
@@ -39,8 +39,8 @@ class FeishuProxy(Proxy):
         self.feishu_event = []
         self.event_hander = EventHandler()
         
-        # event_dict = json.loads(test_json)
-        # self.test_event = EventPack(**event_dict)
+        event_dict = json.loads(test_chat_json)
+        self.test_event = EventPack(**event_dict)
         pass
         
     async def send_office_message(self,content):
@@ -114,8 +114,11 @@ class FeishuProxy(Proxy):
         
     #     return {}
 
-proxy = FeishuProxy('Feishu',profession='LLM')
-logger.info('FeishuProxy init ok')
+proxy = FeishuProxy('Chat expert',profession='LLM')
+logger.info('Chat expert init ok')
+
+proxy_python = FeishuProxy('Python_expert',profession='LLM_Python')
+logger.info('Python expert init ok')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
