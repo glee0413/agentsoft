@@ -211,6 +211,7 @@ class FreelancerOffice:
             self.route_message(message)
                 
             self.kafka_consumer.commit()
+        logger.info(f'message loop shutdown')
         return
     
     def message_process(self,message:Message):
