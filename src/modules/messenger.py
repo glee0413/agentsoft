@@ -144,11 +144,11 @@ class Messenger:
         return
     
     async def aconsumer_kafka_message(self):
-        print(f'consumer message begin')
+        logger.info(f'message consumer start!')
         try:
             async for msg in self.akafka_consumer:
                 message = Message.model_validate_json(msg.value.decode('utf-8'))
-                print(f'arun: {message}')
+                logger.info(f'consumer receive: {message}')
                 await self.message_cb(message)
                 await self.akafka_consumer.commit()
         finally:
