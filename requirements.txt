@@ -11,7 +11,7 @@ pypdf
 
 # middleware
 kafka-python
-
+aiokafka
 # web
 fastapi
 uvicorn
