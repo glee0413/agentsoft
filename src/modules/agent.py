@@ -11,7 +11,8 @@ from modules.model_center import ModelCenter
 from modules.messenger import Messenger
 from modules.message import Message,RegisterLancerRequest, RegisterLancerResponse
 from loguru import logger
-
+from config.constant import ProfessionType
+import os
 class PromptTemplate:
     def __init__(self, template, parameter):
         self.template = template
@@ -57,6 +58,9 @@ class Agent(ABC):
         )
         self.office_id = self.messenger.register(lancer_request = lancer_request,
             message_cb = self.ReceiveMessage)
+        self.stage = 'debug'        
+        if 'production' == os.environ.get('AGENTSOFT_STAGE'):
+            self.stage = 'production'
         
     @abstractmethod
     def ReceiveMessage(self,message:Message):
@@ -118,8 +122,8 @@ class EchoAgent(Agent):
         pass
 
 class LLMAgent(Agent):
-    def __init__(self, name):
-        super().__init__(name,async_mode=True,profession = 'LLM')
+    def __init__(self, name,profession = ProfessionType.PT_LLM.value):
+        super().__init__(name,async_mode=True,profession = profession)
         self.llm = ModelCenter()
         
         asyncio.get_event_loop().run_until_complete(
@@ -127,9 +131,10 @@ class LLMAgent(Agent):
         )
         self.debug = False
         
+        
+        
     # 负责调用外部大模型
     async def ReceiveMessage(self,message:Message):
-        print(f"{datetime.now()}#: {message.content}")
         answer = await self.Conclude(message.content)
         
         reply = message.genereat_reply()
@@ -153,6 +158,8 @@ class LLMAgent(Agent):
         
         answer = await self.llm.aask(content)
         return answer
+    
+            
     
     def launch(self):
         self.messenger.run(sync_run=False)
