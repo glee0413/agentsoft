@@ -16,8 +16,8 @@ class ProfessionType(Enum):
     PT_LLM = ('LLM','一般性的知识解答')
     PT_PM = ('PM','项目经理:负责项目的进度管理,git')
     PT_ARCHITECT = ('Architect','架构师，负责架构任务分解，程序类图及接口设计')
-    PT_CODER_PYTHON = ('PythonCoder','负责python代码编写')
-    PT_TEST_PYTHON = ('PythonTester','负责python测试代码的编写及测试问题提交')
+    PT_EXPERT_PYTHON = ('PythonCoder','负责python代码编写')
+    PT_TESTER_PYTHON = ('PythonTester','负责python测试代码的编写及测试问题提交')
     PT_OP = ('Operater','负责环境构建，版本发布')
     
     def __init__(self, value, description):
@@ -29,7 +29,7 @@ class ProfessionType(Enum):
 
 class FeishuRobotType(Enum):
     FRT_LLM = (ProfessionType.PT_LLM.value,'小睿智聊')
-    FRT_PYTHONEXPRO = (ProfessionType.PT_CODER_PYTHON.value,'小睿胖桑')
+    FRT_PYTHONEXPRO = (ProfessionType.PT_EXPERT_PYTHON.value,'小睿胖桑')
 
 def test_main():
     # 使用示例
