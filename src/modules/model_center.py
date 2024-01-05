@@ -56,7 +56,7 @@ class ModelCenter:
 
         return answer_str
     
-    async def invoke(self,prompt_template:str,prompt_value:dict,model = 'qianfan'):
+    async def ainvoke(self,prompt_template:str,prompt_value:dict,model = 'qianfan'):
         output_parser = StrOutputParser()
         prompt = PromptTemplate.from_template(prompt_template)
         chain = prompt | self.llm_model[model] | output_parser
