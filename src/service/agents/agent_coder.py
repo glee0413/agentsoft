@@ -1,24 +1,19 @@
-from agent import LLMAgent
-from message import Message
+from modules.agent import LLMAgent
+from modules.message import Message
 from langchain.prompts import ChatPromptTemplate
 from prompt.dev_prompt import python_coder_template
-
+from config.constant import ProfessionType
 
 class CoderAgent(LLMAgent):
     def __init__(self, name):
-        super().__init__(name)
+        super().__init__(name,profession=ProfessionType.PT_EXPERT_PYTHON)
         self.python_hat = ChatPromptTemplate.from_template(python_coder_template)
-        
-        
-    def ReceiveMessage(self,message:Message):
-        return
     
-    def PostMessage(self,content):
-        return
-    
-    def Conclude(self):
+    async def Conclude(self,content:str):
         # 总结的函数
-        pass
+        prompt_value = {'demand':content}
+        response = await self.llm.ainvoke(python_coder_template,prompt_value)
+        return response
     
     def launch(self):
         return
