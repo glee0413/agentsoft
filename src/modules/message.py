@@ -11,6 +11,7 @@ class Message(BaseModel):
     sender_id: str
     team_id:Optional[str] = None
     receive_ids: List[str] # 发送给office进行转发的
+    profession: str
     create_timestamp:  datetime
     
     #@staticmethod
@@ -23,6 +24,7 @@ class Message(BaseModel):
             sender_id='',
             team_id=self.team_id,
             receive_ids=[self.sender_id],
+            profession=self.profession,
             create_timestamp=datetime.now())
         return reply
         

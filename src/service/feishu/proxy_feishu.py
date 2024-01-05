@@ -19,6 +19,9 @@ from modules.message import Message
 import uuid
 from datetime import datetime
 from loguru import logger
+from config.constant import ProfessionType
+from api import MessageApiClient
+from config import constant
 
 class PostRequest(BaseModel):
         challenge: str
@@ -33,17 +36,40 @@ class MessageRecord(BaseModel):
     message: Message
     event:EventPack
 
+class FeishuRobotAccount(BaseModel):
+    app_id: str
+    app_secret: str
+    verification_token: str
+    encrypt_key: str
+    lark_host: str
+
 class FeishuProxy(Proxy):
-    def __init__(self, name, profession='LLM'):
+    def __init__(self, name, profession=ProfessionType.PT_LLM.value):
         super().__init__(name, profession)
-        self.feishu_event = []
+        self.feishu_event = {}
         self.event_hander = EventHandler()
         
         event_dict = json.loads(test_chat_json)
         self.test_event = EventPack(**event_dict)
-        pass
+        self.robot_account = {}
+        self.message_client = {}
+        self.load_robot_config()
+        # self.message_client = MessageApiClient()
         
-    async def send_office_message(self,content):
+
+    def load_robot_config(self,config_file):
+        with open(config_file,'r') as f:
+            data = json.load(f)
+            for key in data.keys():
+                self.robot_account[key] = FeishuRobotAccount(**data[key])
+                # message_api_client = MessageApiClient(env_config.APP_ID, env_config.APP_SECRET, env_config.LARK_HOST)
+
+                self.message_client[key] = MessageApiClient(self.robot_account[key].app_id,
+                                                            self.robot_account[key].app_secret,
+                                                            self.robot_account[key].lark_host)
+                
+        
+    async def send_office_message(self,content,profession = ProfessionType.PT_LLM.value):
         message = Message(
                 id = str(uuid.uuid4()),
                 refer_id='',
@@ -51,6 +77,7 @@ class FeishuProxy(Proxy):
                 content=content,
                 sender_id=self.office_id,
                 receive_ids=[self.profession],
+                profession=profession,
                 create_timestamp=datetime.now()
             )
         
@@ -73,7 +100,12 @@ class FeishuProxy(Proxy):
     
     async def reply_feishu(self,message:Message):
         event = None
-        for ev in self.feishu_event:
+        profession = message.profession
+        if profession not in ProfessionType:
+            logger.error(f'unknown message profession', message)
+            return
+        
+        for ev in self.feishu_event[profession]:
             if message.refer_id == ev['office_message'].id:
                 event = ev['app_event']
                 break
@@ -85,10 +117,10 @@ class FeishuProxy(Proxy):
         await self.event_hander.areply(event_box=event,reply_content=message.content)
         return
     
-    async def event_chat(self,event:EventPack):
-        message = await self.send_office_message(event.event.message.content)
+    async def event_chat(self,event:EventPack,profession=ProfessionType.PT_LLM.value):
+        message = await self.send_office_message(event.event.message.content,profession=profession)
         #self.feishu_event[message.id] = {'office_message':message,'app_event':event}
-        self.feishu_event.append({'office_message':message,'app_event':event})
+        self.feishu_event[profession].append({'office_message':message,'app_event':event})
         
         return
     
@@ -153,8 +185,27 @@ async def reach_chat(request: Request , event: Union[ChallengeVerification, Even
         logger.error("impossible event type")
 
     # print(json.dumps(event,indent=2))
-    
     return {}
+
+async def feishu_interface(request: Request , event: Union[ChallengeVerification, EventPack],
+                           background_tasks: BackgroundTasks,profession=ProfessionType.PT_LLM.value):
+    if isinstance(event,ChallengeVerification):
+        logger.debug(f"event is ChallengeVerification : {event.challenge}")
+        return ResponseResult(challenge=event.challenge)
+    elif isinstance(event, EventPack):
+        logger.debug(f'schema: {event.schema_v}')
+        logger.debug(f'event type: {event.header.event_type}')
+        # await event_handler.dispatch(event)
+        #background_tasks.add_task(event_handler.dispatch,event)
+        await proxy.event_chat(event=event,profession=profession)
+    else:
+        logger.error("impossible event type")
+
+@app.post('/reach/python_expert')
+async def reach_python_expert(request: Request , event: Union[ChallengeVerification, EventPack],background_tasks: BackgroundTasks):
+    await feishu_interface(request=request,event=event,background_tasks=background_tasks,profession=ProfessionType.PT_LLM_Python.value)
+    return
+
 
 @app.get("/proxy/chat_history")
 async def proxy_chat_history():
