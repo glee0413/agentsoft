@@ -86,7 +86,6 @@ class Messenger:
                 
         return
     async def apost_message(self,receive_id, content):
-        logger.trace(f'')
         if isinstance(content,str):
             message = Message(
                 id = str(uuid.uuid4()),
