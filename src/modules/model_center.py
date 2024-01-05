@@ -1,6 +1,6 @@
 from langchain.chat_models import ChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate,PromptTemplate
 from langchain.vectorstores import DocArrayInMemorySearch
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
@@ -10,8 +10,13 @@ from langchain.chat_models import QianfanChatEndpoint
 from langchain.llms import QianfanLLMEndpoint
 from langchain_core.output_parsers import StrOutputParser
 
+from langchain.chains import LLMChain
+
+
 import os
 import asyncio
+
+from loguru import logger
 
 class BaiduConfig(BaseSettings):
     QIANFAN_AK: str
@@ -50,7 +55,23 @@ class ModelCenter:
         print('parse:',answer.generations[0][0].text)
 
         return answer_str
- 
+    
+    async def invoke(self,prompt_template:str,prompt_value:dict,model = 'qianfan'):
+        output_parser = StrOutputParser()
+        prompt = PromptTemplate.from_template(prompt_template)
+        chain = prompt | self.llm_model[model] | output_parser
+        reply_content = await chain.ainvoke(prompt_value)
+        # reply_content = output_parser.invoke(message)
+        logger.info(f'prompt:{prompt}\n value:{prompt_value}\n reply:{reply_content}')
+        
+        # prompt_template = PromptTemplate.from_template(prompt)
+        
+        # chain = LLMChain(llm=self.llm_model[model], prompt=prompt)
+        
+        # response = await chain.arun(prompt_value)
+        #return response
+
+
  
 def test_modelmodel():
     model_center = ModelCenter()
@@ -69,9 +90,23 @@ async def async_test():
     #await asyncio.gather(task1, task2)
     await asyncio.gather(task1)
 
+async def chain_test():
+    
+    prompt_template = """
+Given the user's name, write them a personalized greeting. 
+
+User's name: {name}
+
+Your response:
+"""
+    prompt_value = {'name':'孙悟空'}
+    
+    model_center = ModelCenter()
+    task1 = asyncio.create_task(model_center.invoke(prompt_template,prompt_value))
+    await asyncio.gather(task1)
 
 if __name__ == "__main__":
     #test_modelmodel()
     
-    asyncio.get_event_loop().run_until_complete(async_test())
+    asyncio.get_event_loop().run_until_complete(chain_test())
     #asyncio.run(async_test())
