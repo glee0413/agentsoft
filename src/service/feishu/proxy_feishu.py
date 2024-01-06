@@ -205,10 +205,10 @@ async def feishu_interface(request: Request , event: Union[ChallengeVerification
 async def reach_python_expert(request: Request,
                               event: Union[ChallengeVerification, EventPack],
                               background_tasks: BackgroundTasks):
-    await feishu_interface(request=request,
+    return await feishu_interface(request=request,
                            event=event,background_tasks=background_tasks,
                            profession=ProfessionType.PT_EXPERT_PYTHON.value)
-    return
+    
 
 
 @app.get("/proxy/chat_history")
