@@ -54,7 +54,8 @@ class FeishuProxy(Proxy):
         self.test_event = EventPack(**event_dict)
         self.robot_account = {}
         self.message_client = {}
-        self.load_robot_config()
+        self.load_robot_config('feishu.json')
+        logger.debug(self.robot_account)
         # self.message_client = MessageApiClient()
         
 
@@ -150,11 +151,11 @@ class FeishuProxy(Proxy):
         
     #     return {}
 
-proxy = FeishuProxy('Chat expert',profession='LLM')
-logger.info('Chat expert init ok')
+proxy = FeishuProxy('Feishu Proxy')
+logger.info('Feishu Proxy init ok')
 
-proxy_python = FeishuProxy('Python_expert',profession='LLM_Python')
-logger.info('Python expert init ok')
+# proxy_python = FeishuProxy('Python_expert',profession='LLM_Python')
+# logger.info('Python expert init ok')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -162,13 +163,9 @@ async def lifespan(app: FastAPI):
     logger.info(f'Fastapi lifespace start')
     yield
 
-app = FastAPI(lifespan=lifespan)
 #app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 logger.info('Fastapi init')
-
-
-# @app.on_event("startup")
-
 
 
 @app.post("/reach/chat")
@@ -197,8 +194,7 @@ async def feishu_interface(request: Request , event: Union[ChallengeVerification
         logger.debug(f"event is ChallengeVerification : {event.challenge}")
         return ResponseResult(challenge=event.challenge)
     elif isinstance(event, EventPack):
-        logger.debug(f'schema: {event.schema_v}')
-        logger.debug(f'event type: {event.header.event_type}')
+        logger.info(f'#######\n event:\n{event}\n#######')
         # await event_handler.dispatch(event)
         #background_tasks.add_task(event_handler.dispatch,event)
         await proxy.event_chat(event=event,profession=profession)
@@ -206,8 +202,12 @@ async def feishu_interface(request: Request , event: Union[ChallengeVerification
         logger.error("impossible event type")
 
 @app.post('/reach/python_expert')
-async def reach_python_expert(request: Request , event: Union[ChallengeVerification, EventPack],background_tasks: BackgroundTasks):
-    await feishu_interface(request=request,event=event,background_tasks=background_tasks,profession=ProfessionType.PT_EXPERT_PYTHON.value)
+async def reach_python_expert(request: Request,
+                              event: Union[ChallengeVerification, EventPack],
+                              background_tasks: BackgroundTasks):
+    await feishu_interface(request=request,
+                           event=event,background_tasks=background_tasks,
+                           profession=ProfessionType.PT_EXPERT_PYTHON.value)
     return
 
 
@@ -233,4 +233,7 @@ if __name__ == "__main__":
     #logger.add(sys.stderr, level="INFO")
 
     #logger.add(os.path.basename(__file__)+'.log',backtrace=True, diagnose=True,rotation="500 MB")
+    log_file = os.path.basename(__file__) + '.log'
+    logger.add(log_file,backtrace=True, diagnose=True,rotation="500 MB",serialize=True)
+    
     main()
