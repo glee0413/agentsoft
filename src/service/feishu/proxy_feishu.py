@@ -125,9 +125,11 @@ class FeishuProxy(Proxy):
     async def event_chat(self,event:EventPack,profession=ProfessionType.PT_LLM.value):
         message = await self.send_office_message(event.event.message.content,profession=profession)
         #self.feishu_event[message.id] = {'office_message':message,'app_event':event}
+        if profession not in self.feishu_event:
+            self.feishu_event[profession] = []
         self.feishu_event[profession].append({'office_message':message,'app_event':event})
         
-        return
+        return {}
     
     async def chat_history(self):
         return self.feishu_event
