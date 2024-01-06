@@ -103,8 +103,8 @@ class FeishuProxy(Proxy):
     async def reply_feishu(self,message:Message):
         event = None
         profession = message.profession
-        if not any( profession == item.value[0] for item in ProfessionType):
-            logger.error(f'unknown message profession', message)
+        if not any( profession == item.value for item in ProfessionType):
+            logger.error(f'unknown message profession {profession}', message)
             return
         if profession not in self.feishu_event:
             logger.error(f'No {profession} context chat')
