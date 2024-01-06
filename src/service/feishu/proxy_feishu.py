@@ -46,6 +46,7 @@ class FeishuRobotAccount(BaseModel):
 class FeishuProxy(Proxy):
     def __init__(self, name, profession=ProfessionType.PT_LLM.value):
         super().__init__(name, profession)
+        #TODO: 需要用redis来记录聊天记录
         self.feishu_event = {}
         self.event_hander = EventHandler()
         
@@ -89,7 +90,7 @@ class FeishuProxy(Proxy):
         logger.info(f'receive message from office: {message.content}')
         #TODO: 发送给飞书
         await self.reply_feishu(message=message)
-        pass
+        
     
     async def launch(self):
         await self.messenger.arun()
@@ -101,8 +102,11 @@ class FeishuProxy(Proxy):
     async def reply_feishu(self,message:Message):
         event = None
         profession = message.profession
-        if profession not in ProfessionType:
+        if not any( profession == item.value[0] for item in ProfessionType):
             logger.error(f'unknown message profession', message)
+            return
+        if profession not in self.feishu_event:
+            logger.error(f'No {profession} context chat')
             return
         
         for ev in self.feishu_event[profession]:
@@ -203,7 +207,7 @@ async def feishu_interface(request: Request , event: Union[ChallengeVerification
 
 @app.post('/reach/python_expert')
 async def reach_python_expert(request: Request , event: Union[ChallengeVerification, EventPack],background_tasks: BackgroundTasks):
-    await feishu_interface(request=request,event=event,background_tasks=background_tasks,profession=ProfessionType.PT_LLM_Python.value)
+    await feishu_interface(request=request,event=event,background_tasks=background_tasks,profession=ProfessionType.PT_EXPERT_PYTHON.value)
     return
 
 
