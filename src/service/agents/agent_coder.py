@@ -15,9 +15,6 @@ class CoderAgent(LLMAgent):
         response = await self.llm.ainvoke(python_coder_template,prompt_value)
         return response
     
-    def launch(self):
-        return
-    
     def stop(self):
         return
     
@@ -26,7 +23,8 @@ class CoderAgent(LLMAgent):
         pass
 
 def test_llmagent():
-    LLMAgent('LLMAgent')
+    agent = CoderAgent('Python Expert')
+    agent.launch()
     pass
 
 if __name__ == "__main__":
