@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from .message import Message,RegisterLancerRequest
 from .messenger import Messenger
-
+from loguru import logger
 class Proxy(ABC):
     """
     使用异步的方式来连接外部应用(飞书、微信)与内部agent系统
@@ -13,6 +13,7 @@ class Proxy(ABC):
         self.profession = profession #通过profession来连接对应的profession的agent
         self.group_id = group_id
         self.messenger = Messenger(agent_id=self.name,group_id=self.group_id,async_mode = True)
+        logger.info(f'Register Freelancer')
         lancer_request = RegisterLancerRequest(
             profession = self.profession,
             name = self.name,
