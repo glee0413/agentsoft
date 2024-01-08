@@ -57,8 +57,9 @@ class FeishuProxy(Proxy):
         self.test_event = EventPack(**event_dict)
         self.robot_account : FeishuRobotAccount = {}
         self.feishu_robot_client = {}
-        self.load_robot_config('feishu.json')
         self.feishu_version = 'test'
+        
+        self.load_robot_config('feishu.json')
         logger.debug(self.robot_account)
         # self.message_client = MessageApiClient()
         
