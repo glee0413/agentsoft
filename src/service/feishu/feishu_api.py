@@ -53,25 +53,16 @@ class FeishuClient(object):
     
     async def reply(self,message_id:str,msg_type:str,content:str):
         url = f"{self._lark_host}/open-apis/im/v1/messages/{message_id}/reply"
-        #feishu_content = json.dumps({f'{msg_type}':f'{content}'})
-        feishu_content = json.dumps({'text':f'{content}'})
+        feishu_content = json.dumps({f'{msg_type}':f'{content}'})
+        #feishu_content = json.dumps({'text':f'{content}'})
         
         in_thread = True
         
         req_body = {
             "content": feishu_content,
-            "msg_type": "text",
-            "reply_in_thread": in_thread,
+            "msg_type": msg_type,
+            "reply_in_thread": True,
         }
-        print(url)
-        print(self._header)
-        print(json.dumps(req_body))
-        
-        payload = json.dumps({
-            "content": "{\"text\":\"test content\"}",
-            "msg_type": "text",
-            "reply_in_thread": True
-        })
 
         async with httpx.AsyncClient() as client:
             response = await client.post(url=url,headers=self._header,data=json.dumps(req_body))
@@ -88,7 +79,7 @@ async def test_feishu_api():
     
     print(await client.tenant_access_token)
     
-    await client.reply('om_c4672ee13cda41d17c15455e3add3e62','text','hello kitti')
+    await client.reply('om_c4672ee13cda41d17c15455e3add3e62','text','hello kitti oh oh')
 
         
 if __name__ == "__main__":
