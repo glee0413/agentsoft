@@ -73,8 +73,8 @@ class FeishuClient(object):
     
 
 async def test_feishu_api():
-    client = FeishuClient("cli_a519c0f9183a1013",
-                          "B9od5idVonjc0sf4FLOxHqG3ID4GgaUj",
+    client = FeishuClient("python",
+                          "python",
                           "https://open.feishu.cn")
     
     print(await client.tenant_access_token)
