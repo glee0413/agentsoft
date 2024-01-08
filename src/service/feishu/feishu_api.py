@@ -34,7 +34,7 @@ class FeishuClient(object):
 
         self._header = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + self.tenant_access_token,
+            "Authorization": "Bearer " + self._tenant_access_token,
         }
     
     async def send_message(self,receive_id_type:str,receive_id:str,
@@ -53,15 +53,28 @@ class FeishuClient(object):
     
     async def reply(self,message_id:str,msg_type:str,content:str):
         url = f"{self._lark_host}/open-apis/im/v1/messages/{message_id}/reply"
-        feishu_content = json.dumps({f'{msg_type}':f'{content}'})
+        #feishu_content = json.dumps({f'{msg_type}':f'{content}'})
+        feishu_content = json.dumps({'text':f'{content}'})
+        
+        in_thread = True
+        
         req_body = {
             "content": feishu_content,
-            "msg_type": f'{msg_type}',
-            "reply_in_thread": 'true',
+            "msg_type": "text",
+            "reply_in_thread": in_thread,
         }
+        print(url)
+        print(self._header)
+        print(json.dumps(req_body))
+        
+        payload = json.dumps({
+            "content": "{\"text\":\"test content\"}",
+            "msg_type": "text",
+            "reply_in_thread": True
+        })
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(url=url,headers=self._header,data=req_body)
+            response = await client.post(url=url,headers=self._header,data=json.dumps(req_body))
         
         logger.info(response)
         
@@ -69,12 +82,13 @@ class FeishuClient(object):
     
 
 async def test_feishu_api():
-    client = FeishuClient("cli_a519c0462ff9500d",
-                          "zsjlVL1YNrxPpgg4HM24fVAEqrDaERgM",
-                          "https://open.feishu.cn")   
+    client = FeishuClient("cli_a519c0f9183a1013",
+                          "B9od5idVonjc0sf4FLOxHqG3ID4GgaUj",
+                          "https://open.feishu.cn")
     
     print(await client.tenant_access_token)
-    print(await client.tenant_access_token)
+    
+    await client.reply('om_c4672ee13cda41d17c15455e3add3e62','text','hello kitti')
 
         
 if __name__ == "__main__":
