@@ -53,7 +53,7 @@ class FeishuProxy(Proxy):
         event_dict = json.loads(test_chat_json)
         self.test_event = EventPack(**event_dict)
         self.robot_account = {}
-        self.message_client = {}
+        self.feishu_robot_client = {}
         self.load_robot_config('feishu.json')
         logger.debug(self.robot_account)
         # self.message_client = MessageApiClient()
@@ -66,7 +66,7 @@ class FeishuProxy(Proxy):
                 self.robot_account[key] = FeishuRobotAccount(**data[key])
                 # message_api_client = MessageApiClient(env_config.APP_ID, env_config.APP_SECRET, env_config.LARK_HOST)
 
-                self.message_client[key] = MessageApiClient(self.robot_account[key].app_id,
+                self.feishu_robot_client[key] = MessageApiClient(self.robot_account[key].app_id,
                                                             self.robot_account[key].app_secret,
                                                             self.robot_account[key].lark_host)
                 
@@ -118,8 +118,20 @@ class FeishuProxy(Proxy):
         if not event:
             logger.error(f'Unknonw message {message}')
             return
+        #TODO: 根据不同的proxy使用不同的client
         
-        await self.event_hander.areply(event_box=event,reply_content=message.content)
+        feishu_client = self.feishu_robot_client[profession]
+        feishu_content = json.dumps({'text':f'{message.content}'})
+        
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+                    None,feishu_client.send_text_with_open_id,
+                    event.event.sender.sender_id.open_id, 
+                    #event_box.event.message.content
+                    feishu_content
+                )
+        
+        # await self.event_hander.areply(event_box=event,reply_content=message.content)
         return
     
     async def event_chat(self,event:EventPack,profession=ProfessionType.PT_LLM.value):
