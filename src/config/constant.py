@@ -27,6 +27,14 @@ class ProfessionType(Enum):
     def __str__(self):
         return self.description
 
+class FeishuReceiveIdType(Enum):
+    OPEN_ID = "open_id"
+    USER_ID = "user_id"
+    UNION_ID = "union_id"
+    EMAIL = "email"
+    CHAT_ID = "chat_id"
+
+
 class FeishuRobotType(Enum):
     FRT_LLM = (ProfessionType.PT_LLM.value,'小睿智聊')
     FRT_PYTHONEXPRO = (ProfessionType.PT_EXPERT_PYTHON.value,'小睿胖桑')
