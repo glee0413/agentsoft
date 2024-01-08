@@ -214,27 +214,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 logger.info('Fastapi init')
 
-
-@app.post("/reach/chat")
-async def reach_chat(request: Request , event: Union[ChallengeVerification, EventPack],background_tasks: BackgroundTasks):
-    if isinstance(event,ChallengeVerification):
-        logger.debug(f"event is ChallengeVerification : {event.challenge}")
-        await proxy.send_office_message(event.challenge)
-        #proxy.test_event.event.message.content = event.challenge
-        #await proxy.event_chat(event=proxy.test_event)
-        return ResponseResult(challenge=event.challenge)
-    elif isinstance(event, EventPack):
-        logger.debug(f'schema: {event.schema_v}')
-        logger.debug(f'event type: {event.header.event_type}')
-        # await event_handler.dispatch(event)
-        #background_tasks.add_task(event_handler.dispatch,event)
-        await proxy.event_chat(event=event)
-    else:
-        logger.error("impossible event type")
-
-    # print(json.dumps(event,indent=2))
-    return {}
-
 async def feishu_interface(request: Request , event: Union[ChallengeVerification, EventPack],
                            background_tasks: BackgroundTasks,profession=ProfessionType.PT_LLM.value):
     if isinstance(event,ChallengeVerification):
@@ -260,12 +239,39 @@ async def is_to_me(event: Union[ChallengeVerification, EventPack],name:str):
     to_me = any(mention.name == name for mention in event.event.message.mentions)
     return to_me
 
+@app.post("/reach/chat")
+async def reach_chat(request: Request , event: Union[ChallengeVerification, EventPack],background_tasks: BackgroundTasks):
+    
+    my_name = '小睿慧聊'
+    to_me = is_to_me(event=event,name=my_name)
+    if not to_me:
+        logger.info(f'####### not to me message:\n {event.model_dump_json()}\n#######')
+        return
+    
+    if isinstance(event,ChallengeVerification):
+        logger.debug(f"event is ChallengeVerification : {event.challenge}")
+        await proxy.send_office_message(event.challenge)
+        #proxy.test_event.event.message.content = event.challenge
+        #await proxy.event_chat(event=proxy.test_event)
+        return ResponseResult(challenge=event.challenge)
+    elif isinstance(event, EventPack):
+        logger.debug(f'schema: {event.schema_v}')
+        logger.debug(f'event type: {event.header.event_type}')
+        # await event_handler.dispatch(event)
+        #background_tasks.add_task(event_handler.dispatch,event)
+        await proxy.event_chat(event=event)
+    else:
+        logger.error("impossible event type")
+
+    # print(json.dumps(event,indent=2))
+    return {}
+
 @app.post('/reach/python_expert')
 async def reach_python_expert(request: Request,
                               event: Union[ChallengeVerification, EventPack],
                               background_tasks: BackgroundTasks):
-    if not hasattr(event.event.message,"mentions"):
-            return
+    # if not hasattr(event.event.message,"mentions"):
+    #         return
         
     my_name = '小睿胖桑'
     to_me = is_to_me(event=event,name=my_name)
