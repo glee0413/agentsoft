@@ -4,6 +4,10 @@ import json
 from loguru import logger
 
 class FeishuClient(object):
+    """
+    参考文档：https://open.feishu.cn/document/server-docs/im-v1/message/read_users
+    调试路径：https://open.feishu.cn/api-explorer/cli_a519c0f9183a1013?apiName=read_users&from=op_doc&project=im&resource=message&version=v1
+    """
     def __init__(self, app_id, app_secret, lark_host):
         self._app_id = app_id
         self._app_secret = app_secret
@@ -68,6 +72,12 @@ class FeishuClient(object):
         
         return
     
+    async def get_message(self,message_id:str, user_id_type:str):
+        url = f"{self._lark_host}/open-apis/im/v1/messages/{message_id}?user_id_type={user_id_type}"
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url=url)
+        logger.info(response)
+        return
 
 async def test_feishu_api():
     client = FeishuClient("python",
