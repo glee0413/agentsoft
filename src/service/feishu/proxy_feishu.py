@@ -248,6 +248,18 @@ async def feishu_interface(request: Request , event: Union[ChallengeVerification
     else:
         logger.error("impossible event type")
 
+async def is_to_me(event: Union[ChallengeVerification, EventPack],name:str):
+    if isinstance(event,ChallengeVerification):
+        return True
+    if event.event.message.chat_type == "p2p":
+        return True
+    
+    if not hasattr(event.event.message,"mentions"):
+        return False
+    
+    to_me = any(mention.name == name for mention in event.event.message.mentions)
+    return to_me
+
 @app.post('/reach/python_expert')
 async def reach_python_expert(request: Request,
                               event: Union[ChallengeVerification, EventPack],
@@ -256,9 +268,13 @@ async def reach_python_expert(request: Request,
             return
         
     my_name = '小睿胖桑'
-    to_me = any(mention.name == my_name for mention in event.event.message.mentions)
+    to_me = is_to_me(event=event,name=my_name)
     if not to_me:
-        return {}
+        logger.info(f'####### not to me message:\n {event.model_dump_json()}\n#######')
+        return
+    # to_me = any(mention.name == my_name for mention in event.event.message.mentions)
+    # if not to_me:
+    #     return {}
     
     return await feishu_interface(request=request,
                            event=event,background_tasks=background_tasks,
