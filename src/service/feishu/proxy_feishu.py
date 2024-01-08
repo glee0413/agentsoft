@@ -39,7 +39,9 @@ class MessageRecord(BaseModel):
 
 class FeishuRobotAccount(BaseModel):
     app_id: str
+    test_app_id: str
     app_secret: str
+    test_app_secret: str
     verification_token: str
     encrypt_key: str
     lark_host: str
@@ -53,9 +55,10 @@ class FeishuProxy(Proxy):
         
         event_dict = json.loads(test_chat_json)
         self.test_event = EventPack(**event_dict)
-        self.robot_account = {}
+        self.robot_account : FeishuRobotAccount = {}
         self.feishu_robot_client = {}
         self.load_robot_config('feishu.json')
+        self.feishu_version = 'test'
         logger.debug(self.robot_account)
         # self.message_client = MessageApiClient()
         
@@ -66,10 +69,14 @@ class FeishuProxy(Proxy):
             for key in data.keys():
                 self.robot_account[key] = FeishuRobotAccount(**data[key])
                 # message_api_client = MessageApiClient(env_config.APP_ID, env_config.APP_SECRET, env_config.LARK_HOST)
-
-                self.feishu_robot_client[key] = FeishuClient(self.robot_account[key].app_id,
-                                                            self.robot_account[key].app_secret,
-                                                            self.robot_account[key].lark_host)
+                if self.feishu_version == 'product':
+                    self.feishu_robot_client[key] = FeishuClient(self.robot_account[key].app_id,
+                                                                self.robot_account[key].app_secret,
+                                                                self.robot_account[key].lark_host)
+                else:
+                    self.feishu_robot_client[key] = FeishuClient(self.robot_account[key].test_app_id,
+                                                                self.robot_account[key].test_app_secret,
+                                                                self.robot_account[key].lark_host)
                 
         
     async def send_office_message(self,content,profession = ProfessionType.PT_LLM.value):
@@ -122,18 +129,20 @@ class FeishuProxy(Proxy):
         #TODO: 根据不同的proxy使用不同的client
         
         feishu_client:FeishuClient = self.feishu_robot_client[profession]
-        feishu_content = json.dumps({'text':f'{message.content}'})
+        # feishu_content = json.dumps({'text':f'{message.content}'})
         
-        if len(event.event.message.chat_id) != 0:
-            await feishu_client.send_message(receive_id_type='chat_id',
-                                             receive_id=event.event.message.chat_id,
-                                             msg_type='text',
-                                             content=feishu_content)
-        else:
-            await feishu_client.send_message(receive_id_type='open_id',
-                                             receive_id=event.event.sender.sender_id.open_id,
-                                             msg_type='text',
-                                             content=feishu_content)
+        feishu_client.reply(event.event.message.message_id,'text',message.content)
+        
+        # if len(event.event.message.chat_id) != 0:
+        #     await feishu_client.send_message(receive_id_type='chat_id',
+        #                                      receive_id=event.event.message.chat_id,
+        #                                      msg_type='text',
+        #                                      content=feishu_content)
+        # else:
+        #     await feishu_client.send_message(receive_id_type='open_id',
+        #                                      receive_id=event.event.sender.sender_id.open_id,
+        #                                      msg_type='text',
+        #                                      content=feishu_content)
         
         # loop = asyncio.get_event_loop()
         
@@ -156,6 +165,8 @@ class FeishuProxy(Proxy):
         return
     
     async def event_chat(self,event:EventPack,profession=ProfessionType.PT_LLM.value):
+        
+        
         message = await self.send_office_message(event.event.message.content,profession=profession)
         #self.feishu_event[message.id] = {'office_message':message,'app_event':event}
         if profession not in self.feishu_event:
@@ -240,6 +251,14 @@ async def feishu_interface(request: Request , event: Union[ChallengeVerification
 async def reach_python_expert(request: Request,
                               event: Union[ChallengeVerification, EventPack],
                               background_tasks: BackgroundTasks):
+    if not hasattr(event.event.message,"mentions"):
+            return
+        
+    my_name = '小睿胖桑'
+    to_me = any(mention.name == my_name for mention in event.event.message.mentions)
+    if not to_me:
+        return {}
+    
     return await feishu_interface(request=request,
                            event=event,background_tasks=background_tasks,
                            profession=ProfessionType.PT_EXPERT_PYTHON.value)
