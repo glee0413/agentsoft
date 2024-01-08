@@ -4,6 +4,8 @@ from loguru import logger
 import pickle
 import json
 import os
+from config.constant import ProfessionType
+
 
 def custom_value_serializer(value):
     if isinstance(value, dict):
@@ -39,8 +41,20 @@ def main():
 
     return
 
+def test():
+    profession = 'LLM'
+    if not any( profession == item.value for item in ProfessionType):
+            logger.error(f'unknown message profession {profession}')
+    else:
+        print('OK')
+            
+    # if not any( print(item.value) for item in ProfessionType):
+    #         logger.error(f'unknown message profession {profession}')
+
 if __name__ == "__main__":
     log_file = os.path.basename(__file__) + '.log'
     print(log_file)
     logger.add(log_file,backtrace=True, diagnose=True,rotation="500 MB",serialize=True)
-    main()
+    
+    #main()
+    test()
