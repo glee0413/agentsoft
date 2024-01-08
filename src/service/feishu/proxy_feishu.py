@@ -22,6 +22,7 @@ from loguru import logger
 from config.constant import ProfessionType
 from api import MessageApiClient
 from config import constant
+from feishu_api import FeishuClient
 
 class PostRequest(BaseModel):
         challenge: str
@@ -66,7 +67,7 @@ class FeishuProxy(Proxy):
                 self.robot_account[key] = FeishuRobotAccount(**data[key])
                 # message_api_client = MessageApiClient(env_config.APP_ID, env_config.APP_SECRET, env_config.LARK_HOST)
 
-                self.feishu_robot_client[key] = MessageApiClient(self.robot_account[key].app_id,
+                self.feishu_robot_client[key] = FeishuClient(self.robot_account[key].app_id,
                                                             self.robot_account[key].app_secret,
                                                             self.robot_account[key].lark_host)
                 
@@ -101,7 +102,7 @@ class FeishuProxy(Proxy):
     ### 处理与飞书的逻辑
     
     async def reply_feishu(self,message:Message):
-        event = None
+        event : EventPack = None
         profession = message.profession
         if not any( profession == item.value for item in ProfessionType):
             logger.error(f'unknown message profession {profession}', message)
@@ -120,16 +121,36 @@ class FeishuProxy(Proxy):
             return
         #TODO: 根据不同的proxy使用不同的client
         
-        feishu_client = self.feishu_robot_client[profession]
+        feishu_client:FeishuClient = self.feishu_robot_client[profession]
         feishu_content = json.dumps({'text':f'{message.content}'})
         
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(
-                    None,feishu_client.send_text_with_open_id,
-                    event.event.sender.sender_id.open_id, 
-                    #event_box.event.message.content
-                    feishu_content
-                )
+        if len(event.event.message.chat_id) != 0:
+            await feishu_client.send_message(receive_id_type='chat_id',
+                                             receive_id=event.event.message.chat_id,
+                                             msg_type='text',
+                                             content=feishu_content)
+        else:
+            await feishu_client.send_message(receive_id_type='open_id',
+                                             receive_id=event.event.sender.sender_id.open_id,
+                                             msg_type='text',
+                                             content=feishu_content)
+        
+        # loop = asyncio.get_event_loop()
+        
+        # if not event.event.message.chat_id:
+        #     await loop.run_in_executor(
+        #             None,feishu_client.send_text_with_chat_id,
+        #             event.event.message.chat_id, 
+        #             #event_box.event.message.content
+        #             feishu_content
+        #         )
+        # else:
+        #     await loop.run_in_executor(
+        #                 None,feishu_client.send_text_with_open_id,
+        #                 event.event.sender.sender_id.open_id, 
+        #                 #event_box.event.message.content
+        #                 feishu_content
+        #             )
         
         # await self.event_hander.areply(event_box=event,reply_content=message.content)
         return
