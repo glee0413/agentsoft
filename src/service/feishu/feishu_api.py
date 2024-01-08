@@ -54,10 +54,7 @@ class FeishuClient(object):
     async def reply(self,message_id:str,msg_type:str,content:str):
         url = f"{self._lark_host}/open-apis/im/v1/messages/{message_id}/reply"
         feishu_content = json.dumps({f'{msg_type}':f'{content}'})
-        #feishu_content = json.dumps({'text':f'{content}'})
-        
-        in_thread = True
-        
+                
         req_body = {
             "content": feishu_content,
             "msg_type": msg_type,
